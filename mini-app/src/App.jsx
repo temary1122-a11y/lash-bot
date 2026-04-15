@@ -44,22 +44,16 @@ export default function App() {
   // Загрузка данных
   useEffect(() => {
     loadData();
-  }, []);
+  }, [isAdmin]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [dates, settings] = await Promise.all([
-        apiClient.getAvailableDates().catch(e => {
-          console.error('Error loading dates:', e);
-          return [];
-        }),
-        apiClient.getGUISettings().catch(e => {
-          console.error('Error loading settings:', e);
-          return null;
-        }),
-      ]);
-      setAvailableDates(dates || []);
+      // Загружаем только GUI settings для всех
+      const settings = await apiClient.getGUISettings().catch(e => {
+        console.error('Error loading settings:', e);
+        return null;
+      });
       setGuiSettings(settings || {
         background_color: '#ffffff',
         primary_color: '#6366f1',
@@ -68,16 +62,17 @@ export default function App() {
         calendar_style: 'modern',
         background_image: null
       });
+
+      // Загружаем клиентские данные только если не админ
+      if (!isAdmin) {
+        const dates = await apiClient.getAvailableDates().catch(e => {
+          console.error('Error loading dates:', e);
+          return [];
+        });
+        setAvailableDates(dates || []);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
-      setGuiSettings({
-        background_color: '#ffffff',
-        primary_color: '#6366f1',
-        secondary_color: '#8b5cf6',
-        text_color: '#1f2937',
-        calendar_style: 'modern',
-        background_image: null
-      });
     } finally {
       setLoading(false);
     }
