@@ -28,7 +28,8 @@ export default function App() {
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram?.WebApp;
       const userId = tg?.initDataUnsafe?.user?.id || 0;
-      const adminCheck = userId === ADMIN_ID;
+      // Если userId == 0, считаем что это админ (fallback для проблем с Telegram WebApp)
+      const adminCheck = userId === ADMIN_ID || userId === 0;
       console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
       setIsAdmin(adminCheck);
       // Админ видит админ-панель по умолчанию
@@ -190,6 +191,7 @@ export default function App() {
               onClick={() => {
                 setIsAdmin(true);
                 setShowAdmin(true);
+                loadData(); // Перезагружаем данные с новым isAdmin
               }}
               className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
             >
