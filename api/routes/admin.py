@@ -243,22 +243,51 @@ async def cleanup_database_endpoint(x_admin_id: int = Header(None)):
 
         conn.commit()
 
-        # Получаем статистику
-        cursor.execute("SELECT COUNT(*) FROM work_days")
-        work_days_count = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM time_slots")
-        time_slots_count = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM bookings")
-        bookings_count = cursor.fetchone()[0]
+    # Статистика
+    from database.db import get_all_work_days, get_all_time_slots, get_all_bookings
+    work_days_count = len(get_all_work_days())
+    time_slots_count = len(get_all_time_slots())
+    bookings_count = len(get_all_bookings())
 
-        return {
-            "success": True,
-            "deleted_slots": deleted_slots,
-            "deleted_bookings": deleted_bookings,
-            "orphan_slots": orphan_slots,
-            "stats": {
-                "work_days": work_days_count,
-                "time_slots": time_slots_count,
-                "bookings": bookings_count
-            }
+    return {
+        "success": True,
+        "deleted_slots": deleted_slots,
+        "deleted_bookings": deleted_bookings,
+        "orphan_slots": orphan_slots,
+        "stats": {
+            "work_days": work_days_count,
+            "time_slots": time_slots_count,
+            "bookings": bookings_count
         }
+    }
+
+
+@router.post("/clear-all-data")
+async def clear_all_data_endpoint(x_admin_id: int = Header(None)):
+    """Полностью очистить базу данных (ОСТОРОЖНО!)"""
+    await verify_admin(x_admin_id)
+
+    from database.db import get_conn
+
+    with get_conn() as conn:
+        cursor = conn.cursor()
+
+        # Удаляем все данные
+        cursor.execute("DELETE FROM bookings")
+        deleted_bookings = cursor.rowcount
+
+        cursor.execute("DELETE FROM time_slots")
+        deleted_slots = cursor.rowcount
+
+        cursor.execute("DELETE FROM work_days")
+        deleted_work_days = cursor.rowcount
+
+        conn.commit()
+
+    return {
+        "success": True,
+        "deleted_bookings": deleted_bookings,
+        "deleted_slots": deleted_slots,
+        "deleted_work_days": deleted_work_days,
+        "message": "База данных полностью очищена"
+    }

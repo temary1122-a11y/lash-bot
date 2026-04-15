@@ -43,42 +43,49 @@ def get_conn():
 # Создание таблиц
 # ────────────────────────────────────────────────────────────
 def init_db() -> None:
-    """Создаёт все нужные таблицы, если они не существует."""
-    with get_conn() as conn:
-        conn.executescript("""
-            -- Рабочие дни
-            CREATE TABLE IF NOT EXISTS work_days (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                day_date  TEXT    UNIQUE NOT NULL,   -- YYYY-MM-DD
-                is_closed INTEGER NOT NULL DEFAULT 0 -- 0 = открыт, 1 = закрыт
-            );
+    """Создаёт все нужные таблицы, если они не существуют."""
+    try:
+        with get_conn() as conn:
+            conn.executescript("""
+                -- Рабочие дни
+                CREATE TABLE IF NOT EXISTS work_days (
+                    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                    day_date  TEXT    UNIQUE NOT NULL,   -- YYYY-MM-DD
+                    is_closed INTEGER NOT NULL DEFAULT 0 -- 0 = открыт, 1 = закрыт
+                );
 
-            -- Временные слоты
-            CREATE TABLE IF NOT EXISTS time_slots (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                day_date  TEXT    NOT NULL,           -- YYYY-MM-DD
-                slot_time TEXT    NOT NULL,           -- HH:MM
-                is_booked INTEGER NOT NULL DEFAULT 0, -- 0 = свободен, 1 = занят
-                UNIQUE(day_date, slot_time),
-                FOREIGN KEY (day_date) REFERENCES work_days(day_date) ON DELETE CASCADE
-            );
+                -- Временные слоты
+                CREATE TABLE IF NOT EXISTS time_slots (
+                    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                    day_date  TEXT    NOT NULL,           -- YYYY-MM-DD
+                    slot_time TEXT    NOT NULL,           -- HH:MM
+                    is_booked INTEGER NOT NULL DEFAULT 0, -- 0 = свободен, 1 = занят
+                    UNIQUE(day_date, slot_time),
+                    FOREIGN KEY (day_date) REFERENCES work_days(day_date) ON DELETE CASCADE
+                );
 
-            -- Записи клиентов
-            CREATE TABLE IF NOT EXISTS bookings (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id      INTEGER NOT NULL,
-                username     TEXT,
-                client_name  TEXT    NOT NULL,
-                phone        TEXT    NOT NULL,
-                day_date     TEXT    NOT NULL,
-                slot_time    TEXT    NOT NULL,
-                created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(day_date, slot_time)
-            );
+                -- Записи клиентов
+                CREATE TABLE IF NOT EXISTS bookings (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id      INTEGER NOT NULL,
+                    username     TEXT,
+                    client_name  TEXT    NOT NULL,
+                    phone        TEXT    NOT NULL,
+                    day_date     TEXT    NOT NULL,
+                    slot_time    TEXT    NOT NULL,
+                    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+                    UNIQUE(day_date, slot_time)
+                );
 
-            -- Миграция: открываем все закрытые дни по умолчанию
-            UPDATE work_days SET is_closed = 0 WHERE is_closed = 1;
-        """)
+                -- Миграция: открываем все закрытые дни по умолчанию
+                UPDATE work_days SET is_closed = 0 WHERE is_closed = 1;
+
+                -- Миграция: добавляем service_id в bookings если нет
+                ALTER TABLE bookings ADD COLUMN service_id TEXT;
+            """)
+    except sqlite3.OperationalError:
+        # Игнорируем ошибку если колонка уже существует
+        pass
     logger.info("БД инициализирована.")
 
 
@@ -142,7 +149,15 @@ def get_all_work_days() -> list[sqlite3.Row]:
     """Возвращает все рабочие дни (для админ-панели)."""
     with get_conn() as conn:
         return conn.execute(
-            "SELECT * FROM work_days WHERE day_date >= date('now','localtime') ORDER BY day_date"
+            "SELECT * FROM work_days ORDER BY day_date"
+        ).fetchall()
+
+
+def get_available_work_days() -> list[sqlite3.Row]:
+    """Возвращает доступные рабочие дни для клиентов (только будущие и открытые)."""
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM work_days WHERE day_date >= date('now','localtime') AND is_closed = 0 ORDER BY day_date"
         ).fetchall()
 
 
@@ -231,6 +246,7 @@ def create_booking(
     phone: str,
     day_date: str,
     slot_time: str,
+    service_id: Optional[str] = None,
 ) -> Optional[int]:
     """
     Создаёт запись клиента.
@@ -248,9 +264,9 @@ def create_booking(
         try:
             cursor = conn.execute(
                 """INSERT INTO bookings
-                   (user_id, username, client_name, phone, day_date, slot_time)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (user_id, username, client_name, phone, day_date, slot_time)
+                   (user_id, username, client_name, phone, day_date, slot_time, service_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, username, client_name, phone, day_date, slot_time, service_id)
             )
             booking_id = cursor.lastrowid
             # Помечаем слот как занятый

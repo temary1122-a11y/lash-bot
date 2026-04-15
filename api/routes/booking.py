@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from api.models import WorkDay, TimeSlot, BookingRequest, BookingResponse, MyBooking
 from database.db import (
-    get_all_work_days,
+    get_available_work_days,
     get_free_slots,
     create_booking,
     get_user_booking,
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/booking", tags=["booking"])
 async def get_available_dates():
     """Получить доступные даты и слоты"""
     try:
-        work_days = get_all_work_days()
+        work_days = get_available_work_days()
         result = []
 
         for day in work_days:
@@ -64,7 +64,8 @@ async def create_booking_endpoint(booking: BookingRequest):
             client_name=booking.name,
             phone=booking.phone,
             day_date=booking.date,
-            slot_time=booking.time
+            slot_time=booking.time,
+            service_id=booking.service_id
         )
 
         if booking_id is None:

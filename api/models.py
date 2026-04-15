@@ -20,12 +20,20 @@ class WorkDay(BaseModel):
     is_closed: bool = False
 
 
+class Service(BaseModel):
+    """Услуга"""
+    id: str
+    name: str
+    price: int
+
+
 class BookingRequest(BaseModel):
     """Запрос на запись"""
     date: str
     time: str
     name: str
     phone: str
+    service_id: str  # ID услуги
 
 
 class BookingResponse(BaseModel):
@@ -43,6 +51,7 @@ class GUISettings(BaseModel):
     text_color: str = "#1f2937"
     calendar_style: str = "modern"  # modern, classic, minimal
     background_image: Optional[str] = None
+    services: List[Service] = []  # Список услуг
 
 
 class MyBooking(BaseModel):
@@ -76,7 +85,7 @@ class WorkDayInfo(BaseModel):
     """Информация о рабочем дне"""
     date: str
     is_closed: bool
-    slots: list[str]
+    slots: list[dict]  # Слоты с полями time и is_booked
 
 
 class DeleteWorkDayRequest(BaseModel):

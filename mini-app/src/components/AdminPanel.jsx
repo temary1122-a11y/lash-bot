@@ -178,24 +178,6 @@ export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
             </div>
           </div>
 
-          {/* Calendar style */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Стиль календаря</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {['modern', 'classic', 'minimal'].map(style => (
-                <button
-                  key={style}
-                  onClick={() => handleStyleChange(style)}
-                  className={`p-3 rounded-xl border-2 transition-all capitalize ${
-                    settings.calendar_style === style ? 'border-primary-500' : 'border-gray-200'
-                  }`}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Save button */}
           <button
             onClick={handleSave}
@@ -207,7 +189,7 @@ export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
           </button>
         </>
       ) : activeTab === 'dates' ? (
-        <AdminSchedulePanel apiClient={apiClient} adminId={8736987138} />
+        <AdminSchedulePanel apiClient={apiClient} adminId={8736987138} guiSettings={guiSettings} />
       ) : (
         <ContentPanel />
       )}

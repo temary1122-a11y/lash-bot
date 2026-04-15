@@ -2,10 +2,14 @@
 // src/components/AdminSchedulePanel.jsx — Админ-панель расписания
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar as CalendarIcon, Clock, Plus, Trash2, Lock, Unlock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
 import { ru } from 'date-fns/locale';
+
+// Version check
+console.log('🚨 ADMIN PANEL v2025-04-15.23 — THIS SHOULD BE VISIBLE');
+console.log('Build timestamp:', new Date().toISOString());
 
 const MONTH_NAMES = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -14,11 +18,14 @@ const MONTH_NAMES = [
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-export default function AdminSchedulePanel({ apiClient, adminId }) {
+export default function AdminSchedulePanel({ apiClient, adminId, guiSettings }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [workDays, setWorkDays] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
+  const selectedDayRef = useRef(null); // Критично для защиты от stale closure
   const [daySlots, setDaySlots] = useState([]);
+  const [dayBookings, setDayBookings] = useState([]);
+  const [showBookings, setShowBookings] = useState(false);
   const [newSlot, setNewSlot] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('calendar'); // calendar, slots, clients
@@ -32,10 +39,20 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   // Загрузка клиентов при переключении на вкладку
   useEffect(() => {
     if (activeTab === 'clients') {
-      loadClients();
+      // loadClients(); // Временно отключено - требует userId
+      console.log('Clients tab disabled - needs userId');
     }
   }, [activeTab]);
-  
+
+  // Логирование изменений selectedDay
+  useEffect(() => {
+    console.log('=== selectedDay CHANGED ===');
+    console.log('New selectedDay:', selectedDay);
+    console.log('Active tab:', activeTab);
+    selectedDayRef.current = selectedDay; // Синхронизируем ref
+  }, [selectedDay]);
+
+  /*
   const loadClients = async () => {
     try {
       setLoading(true);
@@ -47,19 +64,24 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
       setLoading(false);
     }
   };
+  */
   
   const loadWorkDays = async () => {
     try {
       setLoading(true);
+      console.log('=== LOADING WORK DAYS ===');
+      console.log('Current month:', currentMonth);
       const data = await apiClient.getWorkDays(adminId);
+      console.log('Work days data:', data);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
 
       const filteredDays = data.filter(day => {
-        const dayDate = new Date(day.day_date);
+        const dayDate = new Date(day.date);
         return dayDate >= monthStart && dayDate <= monthEnd;
       });
 
+      console.log('Filtered work days:', filteredDays);
       setWorkDays(filteredDays);
     } catch (error) {
       console.error('Error loading work days:', error);
@@ -74,7 +96,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
       console.log('Loading day slots for:', { date, adminId });
       const data = await apiClient.getWorkDays(adminId);
       console.log('Work days data:', data);
-      const dayData = data.find(d => d.day_date === date);
+      const dayData = data.find(d => d.date === date);
       console.log('Day data for', date, ':', dayData);
       setDaySlots(dayData?.slots || []);
     } catch (error) {
@@ -83,56 +105,152 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
       setLoading(false);
     }
   };
-  
-  const handleDayClick = (date) => {
+
+  const loadDayBookings = async (date) => {
+    try {
+      setLoading(true);
+      const data = await apiClient.getBookingsForDate(date);
+      console.log('Day bookings for', date, ':', data);
+      setDayBookings(data);
+    } catch (error) {
+      console.error('Error loading day bookings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDayClick = useCallback((date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    console.log('Day clicked:', { date, dateStr });
+    console.log('=== DAY CLICKED ===');
+    console.log('Date object:', date);
+    console.log('Date string:', dateStr);
+    console.log('Setting selectedDay to:', dateStr);
+
     setSelectedDay(dateStr);
     setActiveTab('slots');
     loadDaySlots(dateStr);
-  };
+    loadDayBookings(dateStr);
+    setShowBookings(true);
+  }, []); // Пустые зависимости - dateStr передаётся явно
   
-  const handleAddSlot = async () => {
-    if (!selectedDay || !newSlot) return;
+  const handleAddSlot = useCallback(async () => {
+    const currentSelectedDay = selectedDayRef.current;
+
+    if (!currentSelectedDay || !newSlot) {
+      console.warn('No selectedDay or newSlot');
+      return;
+    }
 
     try {
       setLoading(true);
-      console.log('Adding slot:', { selectedDay, newSlot, adminId });
+      console.log('=== ADDING SLOT ===');
+      console.log('selectedDay (from ref):', currentSelectedDay);
+      console.log('newSlot:', newSlot);
+      console.log('adminId:', adminId);
 
       // Сначала убеждаемся что рабочий день существует
       try {
-        await apiClient.addWorkDay(selectedDay, [], adminId);
+        await apiClient.addWorkDay(currentSelectedDay, [], adminId);
+        console.log('Work day added/verified');
       } catch (e) {
         // День уже существует - это нормально
         console.log('Work day already exists or error:', e);
       }
 
-      // Теперь добавляем слот
-      await apiClient.addTimeSlot(selectedDay, newSlot, adminId);
+      // Добавляем слот
+      await apiClient.addTimeSlot(adminId, currentSelectedDay, newSlot);
+      console.log('Time slot added successfully');
       setNewSlot('');
-      loadDaySlots(selectedDay);
+
+      // Обновляем workDays локально (без повторного запроса к API)
+      setWorkDays(prev => {
+        const index = prev.findIndex(d => d.date === currentSelectedDay);
+
+        if (index >= 0) {
+          // Обновляем существующий день - добавляем новый слот
+          const newWorkDays = [...prev];
+          const existingSlots = newWorkDays[index].slots || [];
+          newWorkDays[index] = {
+            ...newWorkDays[index],
+            slots: [...existingSlots, { time: newSlot, is_booked: false }]
+          };
+          console.log('✅ Updated existing day in workDays (local)');
+          return newWorkDays;
+        } else {
+          // Добавляем новый день (если он в текущем месяце)
+          const dayDate = new Date(currentSelectedDay);
+          const monthStart = startOfMonth(currentMonth);
+          const monthEnd = endOfMonth(currentMonth);
+
+          if (dayDate >= monthStart && dayDate <= monthEnd) {
+            console.log('✅ Added new day to workDays (local)');
+            return [...prev, {
+              date: currentSelectedDay,
+              is_closed: false,
+              slots: [{ time: newSlot, is_booked: false }]
+            }];
+          } else {
+            console.log('⚠️ Day outside current month, not adding to workDays');
+            return prev;
+          }
+        }
+      });
+
+      // Обновляем слоты для отображения
+      setDaySlots(prev => [...prev, { time: newSlot, is_booked: false }]);
+
+      console.log('✅ Slot added successfully');
     } catch (error) {
       console.error('Error adding slot:', error);
       alert('Ошибка при добавлении слота: ' + (error.message || JSON.stringify(error)));
     } finally {
       setLoading(false);
     }
-  };
+  }, [newSlot, adminId, currentMonth]); // Зависимости: newSlot, adminId, currentMonth
   
-  const handleDeleteSlot = async (slotTime) => {
-    if (!selectedDay) return;
+  const handleDeleteSlot = useCallback(async (slotTime) => {
+    const currentSelectedDay = selectedDayRef.current;
+
+    if (!currentSelectedDay) {
+      console.warn('No selectedDay');
+      return;
+    }
 
     try {
       setLoading(true);
-      await apiClient.deleteTimeSlot(selectedDay, slotTime, adminId);
-      loadDaySlots(selectedDay);
+      console.log('=== DELETING SLOT ===');
+      console.log('selectedDay (from ref):', currentSelectedDay);
+      console.log('slotTime:', slotTime);
+
+      await apiClient.deleteTimeSlot(adminId, currentSelectedDay, slotTime);
+
+      // Обновляем workDays локально (без повторного запроса к API)
+      setWorkDays(prev => {
+        const index = prev.findIndex(d => d.date === currentSelectedDay);
+        if (index >= 0) {
+          const newWorkDays = [...prev];
+          const existingSlots = newWorkDays[index].slots || [];
+          newWorkDays[index] = {
+            ...newWorkDays[index],
+            slots: existingSlots.filter(s => s.time !== slotTime)
+          };
+          console.log('✅ Updated day in workDays after deletion (local)');
+          return newWorkDays;
+        }
+        return prev;
+      });
+
+      // Обновляем слоты для отображения
+      setDaySlots(prev => prev.filter(s => s.time !== slotTime));
+
+      console.log('✅ Slot deleted successfully');
     } catch (error) {
       console.error('Error deleting slot:', error);
       alert('Ошибка при удалении слота');
     } finally {
       setLoading(false);
     }
-  };
+  }, [adminId]); // Зависимости: adminId
   
   const handleToggleDay = async (date, isOpen) => {
     try {
@@ -163,20 +281,16 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
         ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'],
         adminId
       );
-
-      loadWorkDays();
-      setSelectedDay(dateStr);
-      setActiveTab('slots');
-      loadDaySlots(dateStr);
     } catch (error) {
       console.error('Error adding work day:', error);
-      // Если день уже существует, это не ошибка - просто переходим к слотам
+      // Если день уже существует, это не ошибка - просто продолжаем
+    } finally {
+      // Всегда загружаем данные и переходим к слотам
       const dateStr = format(date, 'yyyy-MM-dd');
       loadWorkDays();
       setSelectedDay(dateStr);
       setActiveTab('slots');
       loadDaySlots(dateStr);
-    } finally {
       setLoading(false);
     }
   };
@@ -213,7 +327,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const getWorkDayStatus = (date) => {
     if (!date) return null;
     const dateStr = format(date, 'yyyy-MM-dd');
-    return workDays.find(d => d.day_date === dateStr);
+    return workDays.find(d => d.date === dateStr);
   };
   
   const goToPrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -286,11 +400,11 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
             {getCalendarDays().map((date, index) => {
               const status = getWorkDayStatus(date);
               const isToday = isSameDay(date, new Date());
-              
+
               if (!date) {
                 return <div key={index} className="p-2" />;
               }
-              
+
               return (
                 <div
                   key={index}
@@ -304,21 +418,44 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
                     }
                   }}
                   className={`
-                    p-2 rounded-lg text-center cursor-pointer transition-all relative
-                    ${isToday ? 'ring-2 ring-indigo-500' : ''}
+                    min-h-[80px] rounded-xl text-center cursor-pointer transition-all relative
+                    flex flex-col items-center justify-start p-1
+                    ${isToday ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
                     ${status ? (
-                      status.is_open 
-                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                        : 'bg-red-100 text-red-800 hover:bg-red-200'
-                    ) : 'bg-gray-50 hover:bg-gray-100'}
+                      status.is_open
+                        ? 'bg-white border border-green-200 hover:bg-green-50'
+                        : 'bg-white border border-red-200 hover:bg-red-50'
+                    ) : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'}
                   `}
                 >
-                  <div className="text-sm font-medium">{format(date, 'd')}</div>
-                  {status && status.slots?.length > 0 && (
-                    <div className="text-xs mt-1">
-                      {status.slots.length} слот(ов)
+                  <span className="text-xs font-bold">{format(date, 'd')}</span>
+
+                  {/* Слоты времени прямо в дате */}
+                  {status && status.slots && status.slots.length > 0 && (
+                    <div className="flex flex-col gap-0.5 mt-1 w-full">
+                      {status.slots.slice(0, 3).map((slot, idx) => (
+                        <div
+                          key={idx}
+                          className={`
+                            text-[10px] px-1 py-0.5 rounded text-center
+                            ${slot.is_booked
+                              ? 'bg-error-light text-error-dark'
+                              : 'bg-success-light text-success-dark'
+                            }
+                          `}
+                        >
+                          {slot.time}
+                        </div>
+                      ))}
+                      {status.slots.length > 3 && (
+                        <div className="text-[9px] text-neutral-400 text-center">
+                          +{status.slots.length - 3} ещё
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Индикаторы */}
                   {!status && (
                     <div className="absolute top-1 right-1">
                       <Plus className="w-3 h-3 text-gray-400" />
@@ -332,22 +469,6 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
                 </div>
               );
             })}
-          </div>
-          
-          {/* Легенда */}
-          <div className="flex gap-4 mt-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-100 rounded"></div>
-              <span>Открыт</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-100 rounded"></div>
-              <span>Закрыт</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-50 rounded"></div>
-              <span>Не рабочий</span>
-            </div>
           </div>
         </>
       )}
@@ -392,12 +513,12 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
             ) : (
               daySlots.map((slot) => (
                 <div
-                  key={slot.slot_time}
+                  key={slot.time}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <Clock className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">{slot.slot_time}</span>
+                    <span className="font-medium">{slot.time}</span>
                     {slot.is_booked && (
                       <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                         Занят
@@ -405,7 +526,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
                     )}
                   </div>
                   <button
-                    onClick={() => handleDeleteSlot(slot.slot_time)}
+                    onClick={() => handleDeleteSlot(slot.time)}
                     disabled={slot.is_booked || loading}
                     className="p-2 text-red-600 hover:bg-red-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -415,7 +536,53 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
               ))
             )}
           </div>
-          
+
+          {/* Записи клиентов */}
+          {showBookings && dayBookings.length > 0 && (
+            <div className="mt-6 pt-6 border-t">
+              <h4 className="text-lg font-semibold mb-4">📋 Записи клиентов</h4>
+              <div className="space-y-3">
+                {dayBookings.map((booking) => {
+                  const service = guiSettings?.services?.find(s => s.id === booking.service_id);
+                  return (
+                    <div
+                      key={booking.id}
+                      className="p-4 bg-blue-50 rounded-lg border border-blue-200"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {booking.username && (
+                            <a
+                              href={`https://t.me/${booking.username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline font-medium"
+                            >
+                              @{booking.username}
+                            </a>
+                          )}
+                          <div className="text-sm text-gray-700 mt-1">
+                            <span className="font-medium">{booking.client_name}</span>
+                            <span className="text-gray-500"> • {booking.phone}</span>
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            <Clock className="w-3 h-3 inline mr-1" />
+                            {booking.slot_time}
+                            {service && (
+                              <span className="ml-2 bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs">
+                                {service.name} ({service.price} ₽)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Управление статусом дня */}
           <div className="mt-6 pt-6 border-t">
             <div className="flex items-center justify-between">

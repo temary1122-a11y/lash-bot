@@ -7,11 +7,65 @@ import Calendar from './components/Calendar';
 import TimeSlots from './components/TimeSlots';
 import BookingForm from './components/BookingForm';
 import AdminPanel from './components/AdminPanel';
+import Toast from './components/Toast';
 import { apiClient } from './api/client';
 import { Calendar as CalendarIcon, Settings, Menu } from 'lucide-react';
 
+// Version check
+console.log('🚨 LASH MINI APP ROOT v2025-04-15.23 LOADED');
+console.log('Build timestamp:', new Date().toISOString());
+
 // Admin ID - должен совпадать с ADMIN_ID в .env
 const ADMIN_ID = 8736987138;
+
+// Функция вибрации для Telegram Mini App
+export const triggerHaptic = (type = 'light') => {
+  if (window.Telegram?.WebApp?.HapticFeedback) {
+    switch (type) {
+      case 'light':
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        break;
+      case 'medium':
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        break;
+      case 'heavy':
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+        break;
+      case 'success':
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        break;
+      case 'error':
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        break;
+      default:
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  } else if (navigator.vibrate) {
+    // Fallback для обычного браузера
+    navigator.vibrate(type === 'heavy' ? 200 : type === 'medium' ? 100 : 50);
+  }
+};
+
+// Функция для запроса контакта через Telegram
+export const requestContact = () => {
+  return new Promise((resolve, reject) => {
+    if (window.Telegram?.WebApp?.requestContact) {
+      window.Telegram.WebApp.requestContact((contact) => {
+        if (contact) {
+          resolve({
+            phone: contact.phone_number,
+            firstName: contact.first_name,
+            lastName: contact.last_name,
+          });
+        } else {
+          reject(new Error('Contact request cancelled'));
+        }
+      });
+    } else {
+      reject(new Error('Telegram WebApp not available'));
+    }
+  });
+};
 
 export default function App() {
   const [availableDates, setAvailableDates] = useState([]);
@@ -22,6 +76,7 @@ export default function App() {
   const [guiSettings, setGuiSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [toast, setToast] = useState(null);
   
   // Telegram WebApp integration
   useEffect(() => {
@@ -86,19 +141,23 @@ export default function App() {
     }
   };
   
-  const handleDateSelect = (date) => {
+  const handleDateSelect = (date, timeSlot = null) => {
     setSelectedDate(date);
-    setSelectedTime(null);
-    setShowBookingForm(false);
-    
-    // Находим слоты для выбранной даты
-    const dayData = availableDates.find(d => d.date === date);
-    if (dayData && dayData.slots.length > 0) {
-      // Автоматически выбираем первый доступный слот
-      const firstAvailable = dayData.slots.find(s => s.available);
-      if (firstAvailable) {
-        setSelectedTime(firstAvailable.time);
+    setSelectedTime(timeSlot);
+
+    // Если время не передано, находим первый доступный слот и скрываем форму
+    if (!timeSlot) {
+      setShowBookingForm(false);
+      const dayData = availableDates.find(d => d.date === date);
+      if (dayData && dayData.slots.length > 0) {
+        const firstAvailable = dayData.slots.find(s => s.available);
+        if (firstAvailable) {
+          setSelectedTime(firstAvailable.time);
+        }
       }
+    } else {
+      // Если время передано, сразу показываем форму записи
+      setShowBookingForm(true);
     }
   };
   
@@ -107,6 +166,10 @@ export default function App() {
     setShowBookingForm(true);
   };
   
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
   const handleBookingSubmit = async (formData) => {
     try {
       const response = await apiClient.createBooking({
@@ -114,19 +177,23 @@ export default function App() {
         time: selectedTime,
         name: formData.name,
         phone: formData.phone,
+        service_id: formData.serviceId,
       });
-      
+
       if (response.success) {
-        alert('Запись успешно создана!');
+        triggerHaptic('success');
+        showToast('Запись успешно создана!', 'success');
         setShowBookingForm(false);
         setSelectedDate(null);
         setSelectedTime(null);
         loadData(); // Перезагружаем данные
       } else {
-        alert(`Ошибка: ${response.message}`);
+        triggerHaptic('error');
+        showToast(`Ошибка: ${response.message}`, 'error');
       }
     } catch (error) {
-      alert('Ошибка при создании записи');
+      triggerHaptic('error');
+      showToast('Ошибка при создании записи', 'error');
     }
   };
   
@@ -211,14 +278,16 @@ export default function App() {
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
                 guiSettings={guiSettings}
+                triggerHaptic={triggerHaptic}
               />
 
-              {selectedDate && (
+              {selectedDate && !showBookingForm && (
                 <TimeSlots
                   slots={availableDates.find(d => d.date === selectedDate)?.slots || []}
                   selectedTime={selectedTime}
                   onTimeSelect={handleTimeSelect}
                   guiSettings={guiSettings}
+                  triggerHaptic={triggerHaptic}
                 />
               )}
 
@@ -233,6 +302,15 @@ export default function App() {
             </>
           )}
         </>
+      )}
+
+      {/* Toast уведомления */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

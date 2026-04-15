@@ -96,61 +96,46 @@ class ApiClient {
   }
 
   async addWorkDay(date, timeSlots, adminId) {
-    console.log('addWorkDay called with:', { date, timeSlots, adminId });
-
     const body = { date, time_slots: timeSlots };
-    console.log('Request body object:', body);
-    console.log('Body types:', {
-      date: typeof date,
-      time_slots: typeof timeSlots
-    });
-
     return this.request('/api/admin/add-work-day', {
       method: 'POST',
-      headers: {
-        'x-admin-id': String(adminId),
-      },
       body: JSON.stringify(body),
+      headers: {
+        'x-admin-id': adminId,
+      },
     });
   }
 
-  async addTimeSlot(date, time, adminId) {
-    console.log('addTimeSlot called with:', { date, time, adminId });
-
-    const body = { date, time };
-    console.log('Request body object:', body);
-    console.log('Body types:', {
-      date: typeof date,
-      time: typeof time
-    });
-
+  async addTimeSlot(adminId, date, time) {
+    console.log(`[API] addTimeSlot → date: ${date}, time: ${time}, adminId: ${adminId}`);
     return this.request('/api/admin/add-time-slot', {
       method: 'POST',
+      body: JSON.stringify({ date, time }),
       headers: {
-        'x-admin-id': String(adminId),
+        'x-admin-id': adminId,
       },
-      body: JSON.stringify(body),
     });
   }
 
-  async deleteTimeSlot(date, time, adminId) {
+  async deleteTimeSlot(adminId, date, time) {
     return this.request('/api/admin/delete-time-slot', {
       method: 'POST',
+      body: JSON.stringify({ date, time }),
       headers: {
         'x-admin-id': adminId,
       },
-      body: JSON.stringify({ date, time }),
     });
   }
 
-  async closeDay(date, adminId) {
-    return this.request('/api/admin/close-day', {
+  async deleteWorkDay(day_date) {
+    return this.request('/api/admin/delete-work-day', {
       method: 'POST',
-      headers: {
-        'x-admin-id': adminId,
-      },
-      body: JSON.stringify({ date }),
+      body: JSON.stringify({ day_date }),
     });
+  }
+
+  async getBookingsForDate(date) {
+    return this.request(`/api/admin/bookings/${date}`);
   }
 
   async openDay(date, adminId) {
@@ -163,10 +148,13 @@ class ApiClient {
     });
   }
 
-  async deleteWorkDay(day_date) {
-    return this.request('/api/admin/delete-work-day', {
+  async closeDay(date, adminId) {
+    return this.request('/api/admin/close-day', {
       method: 'POST',
-      body: JSON.stringify({ day_date }),
+      headers: {
+        'x-admin-id': adminId,
+      },
+      body: JSON.stringify({ date }),
     });
   }
 }
