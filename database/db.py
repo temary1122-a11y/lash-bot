@@ -179,6 +179,16 @@ def delete_time_slot(day_date: str, slot_time: str) -> bool:
         return True
 
 
+def delete_work_day(day_date: str) -> bool:
+    """Удаляет рабочий день со всеми слотами. True = успех."""
+    with get_conn() as conn:
+        # Сначала удаляем все слоты этого дня
+        conn.execute("DELETE FROM time_slots WHERE day_date=?", (day_date,))
+        # Затем удаляем сам рабочий день
+        cursor = conn.execute("DELETE FROM work_days WHERE day_date=?", (day_date,))
+        return cursor.rowcount > 0
+
+
 def get_free_slots(day_date: str) -> list[sqlite3.Row]:
     """Возвращает свободные слоты на указанный день."""
     with get_conn() as conn:
