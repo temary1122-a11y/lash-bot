@@ -121,7 +121,7 @@ async def get_work_days_endpoint(x_admin_id: int = Header(None)):
             WorkDayInfo(
                 date=day[1],
                 is_closed=bool(day[2]),
-                slots=[slot[1] for slot in slots],  # slot[1] = slot_time
+                slots=[slot[2] for slot in slots],  # slot[2] = slot_time (исправлено)
             )
         )
     return result

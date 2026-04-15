@@ -43,14 +43,14 @@ def get_conn():
 # Создание таблиц
 # ────────────────────────────────────────────────────────────
 def init_db() -> None:
-    """Создаёт все нужные таблицы, если они не существуют."""
+    """Создаёт все нужные таблицы, если они не существует."""
     with get_conn() as conn:
         conn.executescript("""
             -- Рабочие дни
             CREATE TABLE IF NOT EXISTS work_days (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 day_date  TEXT    UNIQUE NOT NULL,   -- YYYY-MM-DD
-                is_closed INTEGER NOT NULL DEFAULT 0 -- 1 = день закрыт
+                is_closed INTEGER NOT NULL DEFAULT 0 -- 0 = открыт, 1 = закрыт
             );
 
             -- Временные слоты
@@ -58,7 +58,7 @@ def init_db() -> None:
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 day_date  TEXT    NOT NULL,           -- YYYY-MM-DD
                 slot_time TEXT    NOT NULL,           -- HH:MM
-                is_booked INTEGER NOT NULL DEFAULT 0, -- 1 = занят
+                is_booked INTEGER NOT NULL DEFAULT 0, -- 0 = свободен, 1 = занят
                 UNIQUE(day_date, slot_time),
                 FOREIGN KEY (day_date) REFERENCES work_days(day_date) ON DELETE CASCADE
             );
@@ -75,6 +75,9 @@ def init_db() -> None:
                 created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
                 UNIQUE(day_date, slot_time)
             );
+
+            -- Миграция: открываем все закрытые дни по умолчанию
+            UPDATE work_days SET is_closed = 0 WHERE is_closed = 1;
         """)
     logger.info("БД инициализирована.")
 
