@@ -51,7 +51,8 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadWorkDays = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.getWorkDays();
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const data = await apiClient.getWorkDays(adminId);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
       
@@ -71,7 +72,8 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadDaySlots = async (date) => {
     try {
       setLoading(true);
-      const data = await apiClient.getWorkDays();
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const data = await apiClient.getWorkDays(adminId);
       const dayData = data.find(d => d.day_date === date);
       setDaySlots(dayData?.slots || []);
     } catch (error) {
@@ -93,10 +95,8 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     
     try {
       setLoading(true);
-      await apiClient.addTimeSlot({
-        day_date: selectedDay,
-        slot_time: newSlot
-      });
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      await apiClient.addTimeSlot(selectedDay, newSlot, adminId);
       setNewSlot('');
       loadDaySlots(selectedDay);
     } catch (error) {
@@ -112,10 +112,8 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     
     try {
       setLoading(true);
-      await apiClient.deleteTimeSlot({
-        day_date: selectedDay,
-        slot_time: slotTime
-      });
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      await apiClient.deleteTimeSlot(selectedDay, slotTime, adminId);
       loadDaySlots(selectedDay);
     } catch (error) {
       console.error('Error deleting slot:', error);
@@ -128,10 +126,13 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleToggleDay = async (date, isOpen) => {
     try {
       setLoading(true);
-      await apiClient.updateWorkDay({
-        day_date: format(date, 'yyyy-MM-dd'),
-        is_open: isOpen
-      });
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const dateStr = format(date, 'yyyy-MM-dd');
+      if (isOpen) {
+        await apiClient.openDay(dateStr, adminId);
+      } else {
+        await apiClient.closeDay(dateStr, adminId);
+      }
       loadWorkDays();
     } catch (error) {
       console.error('Error toggling day:', error);
@@ -144,10 +145,12 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleAddWorkDay = async (date) => {
     try {
       setLoading(true);
-      await apiClient.addWorkDay({
-        day_date: format(date, 'yyyy-MM-dd'),
-        slots: ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30']
-      });
+      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      await apiClient.addWorkDay(
+        format(date, 'yyyy-MM-dd'),
+        ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'],
+        adminId
+      );
       loadWorkDays();
       setSelectedDay(format(date, 'yyyy-MM-dd'));
       setActiveTab('slots');
@@ -163,9 +166,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleRemoveWorkDay = async (date) => {
     try {
       setLoading(true);
-      await apiClient.deleteWorkDay({
-        day_date: format(date, 'yyyy-MM-dd')
-      });
+      await apiClient.deleteWorkDay(format(date, 'yyyy-MM-dd'));
       loadWorkDays();
       if (selectedDay === format(date, 'yyyy-MM-dd')) {
         setSelectedDay(null);
