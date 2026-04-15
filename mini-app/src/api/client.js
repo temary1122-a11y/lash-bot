@@ -5,8 +5,8 @@
 class ApiClient {
   constructor() {
     // Для разработки: localhost
-    // Для продакшена: задайте BACKEND_URL в .env или здесь
-    this.baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+    // Для продакшена: production backend URL
+    this.baseUrl = import.meta.env.VITE_BACKEND_URL || 'https://lashes-production-3342.up.railway.app';
   }
 
   async request(endpoint, options = {}) {
