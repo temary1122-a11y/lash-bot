@@ -8,12 +8,14 @@ from api.models import (
     AddWorkDayRequest,
     AddTimeSlotRequest,
     DeleteTimeSlotRequest,
+    DeleteWorkDayRequest,
     WorkDayInfo,
 )
 from database.db import (
     add_work_day,
     add_time_slot,
     delete_time_slot,
+    delete_work_day,
     get_all_slots,
     get_all_work_days,
     close_day,
@@ -125,3 +127,14 @@ async def open_day_endpoint(date: str, x_admin_id: int = Header(...)):
     await verify_admin(x_admin_id)
     open_day(date)
     return {"success": True, "message": "День открыт"}
+
+
+@router.post("/delete-work-day")
+async def delete_work_day_endpoint(request: DeleteWorkDayRequest, x_admin_id: int = Header(...)):
+    """Удалить рабочий день"""
+    await verify_admin(x_admin_id)
+    success = delete_work_day(request.day_date)
+    if success:
+        return {"success": True, "message": "Рабочий день удалён"}
+    else:
+        return {"success": False, "message": "День не найден"}

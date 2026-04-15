@@ -77,3 +77,8 @@ class WorkDayInfo(BaseModel):
     date: str
     is_closed: bool
     slots: list[str]
+
+
+class DeleteWorkDayRequest(BaseModel):
+    """Запрос на удаление рабочего дня"""
+    day_date: str
