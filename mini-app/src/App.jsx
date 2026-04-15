@@ -29,6 +29,7 @@ export default function App() {
       const tg = window.Telegram?.WebApp;
       const userId = tg?.initDataUnsafe?.user?.id || 0;
       const adminCheck = userId === ADMIN_ID;
+      console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
       setIsAdmin(adminCheck);
       // Админ видит админ-панель по умолчанию
       setShowAdmin(adminCheck);
@@ -36,6 +37,7 @@ export default function App() {
       tg.expand();
     } else {
       // Если открыто не через Telegram, разрешаем админ-режим
+      console.log('Not opened via Telegram, setting admin mode');
       setIsAdmin(true);
       setShowAdmin(true);
     }
@@ -49,6 +51,8 @@ export default function App() {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('Loading data, isAdmin:', isAdmin);
+      
       // Загружаем только GUI settings для всех
       const settings = await apiClient.getGUISettings().catch(e => {
         console.error('Error loading settings:', e);
@@ -65,11 +69,14 @@ export default function App() {
 
       // Загружаем клиентские данные только если не админ
       if (!isAdmin) {
+        console.log('Loading client data (available dates)');
         const dates = await apiClient.getAvailableDates().catch(e => {
           console.error('Error loading dates:', e);
           return [];
         });
         setAvailableDates(dates || []);
+      } else {
+        console.log('Skipping client data loading (admin mode)');
       }
     } catch (error) {
       console.error('Error loading data:', error);
