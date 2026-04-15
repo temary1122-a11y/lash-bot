@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import booking, admin
+from database.db import init_db
 import json
 
 app = FastAPI(title="Lash Bot API", version="1.0.0")
@@ -23,6 +24,12 @@ app.add_middleware(
 # Подключаем роуты
 app.include_router(booking.router)
 app.include_router(admin.router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Инициализация БД при запуске"""
+    init_db()
 
 
 @app.exception_handler(RequestValidationError)
