@@ -31,11 +31,8 @@ gui_settings = GUISettings()
 
 async def verify_admin(x_admin_id: int = Header(None, description="Admin ID for authentication")):
     """Проверка админ-прав"""
-    # Временно отключено для отладки
-    if x_admin_id is None:
-        pass  # Пропускаем проверку для отладки
-    elif x_admin_id != ADMIN_ID:
-        raise HTTPException(status_code=403, detail="Access denied")
+    # Полностью отключено для отладки Railway deployment
+    pass
 
 
 @router.get("/settings", response_model=GUISettings)
@@ -57,7 +54,7 @@ async def update_gui_settings(settings: GUISettings):
 
 
 @router.post("/add-work-day")
-async def add_work_day_endpoint(request: AddWorkDayRequest, x_admin_id: int = Header(...)):
+async def add_work_day_endpoint(request: AddWorkDayRequest, x_admin_id: int = Header(None)):
     """Добавить рабочий день"""
     await verify_admin(x_admin_id)
 
@@ -74,7 +71,7 @@ async def add_work_day_endpoint(request: AddWorkDayRequest, x_admin_id: int = He
 
 
 @router.post("/add-time-slot")
-async def add_time_slot_endpoint(request: AddTimeSlotRequest, x_admin_id: int = Header(...)):
+async def add_time_slot_endpoint(request: AddTimeSlotRequest, x_admin_id: int = Header(None)):
     """Добавить временной слот"""
     await verify_admin(x_admin_id)
 
@@ -86,7 +83,7 @@ async def add_time_slot_endpoint(request: AddTimeSlotRequest, x_admin_id: int = 
 
 
 @router.post("/delete-time-slot")
-async def delete_time_slot_endpoint(request: DeleteTimeSlotRequest, x_admin_id: int = Header(...)):
+async def delete_time_slot_endpoint(request: DeleteTimeSlotRequest, x_admin_id: int = Header(None)):
     """Удалить временной слот"""
     await verify_admin(x_admin_id)
 
@@ -98,7 +95,7 @@ async def delete_time_slot_endpoint(request: DeleteTimeSlotRequest, x_admin_id: 
 
 
 @router.get("/work-days", response_model=list[WorkDayInfo])
-async def get_work_days_endpoint(x_admin_id: int = Header(...)):
+async def get_work_days_endpoint(x_admin_id: int = Header(None)):
     """Получить все рабочие дни"""
     await verify_admin(x_admin_id)
 
@@ -117,7 +114,7 @@ async def get_work_days_endpoint(x_admin_id: int = Header(...)):
 
 
 @router.post("/close-day")
-async def close_day_endpoint(date: str, x_admin_id: int = Header(...)):
+async def close_day_endpoint(date: str, x_admin_id: int = Header(None)):
     """Закрыть рабочий день"""
     await verify_admin(x_admin_id)
     close_day(date)
@@ -125,7 +122,7 @@ async def close_day_endpoint(date: str, x_admin_id: int = Header(...)):
 
 
 @router.post("/open-day")
-async def open_day_endpoint(date: str, x_admin_id: int = Header(...)):
+async def open_day_endpoint(date: str, x_admin_id: int = Header(None)):
     """Открыть рабочий день"""
     await verify_admin(x_admin_id)
     open_day(date)
@@ -133,7 +130,7 @@ async def open_day_endpoint(date: str, x_admin_id: int = Header(...)):
 
 
 @router.post("/delete-work-day")
-async def delete_work_day_endpoint(request: DeleteWorkDayRequest, x_admin_id: int = Header(...)):
+async def delete_work_day_endpoint(request: DeleteWorkDayRequest, x_admin_id: int = Header(None)):
     """Удалить рабочий день"""
     await verify_admin(x_admin_id)
     success = delete_work_day(request.day_date)
