@@ -29,12 +29,13 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 gui_settings = GUISettings()
 
 
-async def verify_admin(x_admin_id: int = Header(None)):
+async def verify_admin(x_admin_id: int = Header(None, description="Admin ID for authentication")):
     """Проверка админ-прав"""
     # Временно отключено для отладки
-    # if x_admin_id != ADMIN_ID:
-    #     raise HTTPException(status_code=403, detail="Access denied")
-    pass
+    if x_admin_id is None:
+        pass  # Пропускаем проверку для отладки
+    elif x_admin_id != ADMIN_ID:
+        raise HTTPException(status_code=403, detail="Access denied")
 
 
 @router.get("/settings", response_model=GUISettings)
