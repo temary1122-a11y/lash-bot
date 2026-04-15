@@ -110,6 +110,7 @@ def back_to_main_kb() -> InlineKeyboardMarkup:
 # ────────────────────────────────────────────────────────────
 def admin_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-app-gamma-ashen.vercel.app")))
     builder.row(InlineKeyboardButton(text="📅 Просмотр расписания", callback_data="adm_view_schedule"))
     builder.row(
         InlineKeyboardButton(text="➕ Добавить рабочий день", callback_data="adm_add_day"),

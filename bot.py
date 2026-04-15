@@ -10,6 +10,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from config import BOT_TOKEN
 from database import init_db, get_all_future_bookings
@@ -29,19 +30,22 @@ async def on_startup(bot: Bot) -> None:
     """Действия при старте бота."""
     logger.info("Бот запускается...")
 
-    # 1. Инициализируем базу данных
+    # 1. Устанавливаем команды меню
+    await set_bot_commands(bot)
+
+    # 2. Инициализируем базу данных
     init_db()
     logger.info("База данных готова.")
 
-    # 2. Запускаем планировщик
+    # 3. Запускаем планировщик
     scheduler.start()
     logger.info("APScheduler запущен.")
 
-    # 3. Восстанавливаем напоминания из БД
+    # 4. Восстанавливаем напоминания из БД
     future_bookings = get_all_future_bookings()
     restore_reminders_from_db(bot, future_bookings)
 
-    # 4. Уведомляем администратора о запуске
+    # 5. Уведомляем администратора о запуске
     from config import ADMIN_ID
     try:
         await bot.send_message(
@@ -51,6 +55,26 @@ async def on_startup(bot: Bot) -> None:
         )
     except Exception as e:
         logger.warning(f"Не удалось уведомить администратора: {e}")
+
+
+async def set_bot_commands(bot: Bot) -> None:
+    """Устанавливает команды меню бота."""
+    commands = [
+        BotCommand(command="start", description="🚀 Начать / Главное меню"),
+        BotCommand(command="menu", description="📋 Главное меню"),
+        BotCommand(command="book", description="📅 Записаться"),
+        BotCommand(command="cancel", description="❌ Отменить запись"),
+        BotCommand(command="mybooking", description="📋 Моя запись"),
+        BotCommand(command="prices", description="💰 Прайсы"),
+        BotCommand(command="portfolio", description="🖼 Портфолио"),
+        BotCommand(command="admin", description="⚙️ Админ-панель"),
+    ]
+    
+    try:
+        await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
+        logger.info("Команды меню установлены")
+    except Exception as e:
+        logger.warning(f"Не удалось установить команды меню: {e}")
 
 
 async def on_shutdown(bot: Bot) -> None:
