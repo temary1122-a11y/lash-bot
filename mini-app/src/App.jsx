@@ -28,7 +28,10 @@ export default function App() {
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram?.WebApp;
       const userId = tg?.initDataUnsafe?.user?.id || 0;
-      setIsAdmin(userId === ADMIN_ID);
+      const adminCheck = userId === ADMIN_ID;
+      setIsAdmin(adminCheck);
+      // Админ видит админ-панель по умолчанию
+      setShowAdmin(adminCheck);
       tg.ready();
       tg.expand();
     }
@@ -150,14 +153,20 @@ export default function App() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-6 h-6" style={{ color: guiSettings?.primary_color }} />
-          <h1 className="text-xl font-bold text-gray-800">Запись на наращивание</h1>
+          <h1 className="text-xl font-bold text-gray-800">
+            {showAdmin ? 'Админ-панель' : 'Запись на наращивание'}
+          </h1>
         </div>
         {isAdmin && (
           <button
             onClick={() => setShowAdmin(!showAdmin)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+            style={{ 
+              backgroundColor: showAdmin ? guiSettings?.primary_color : '#f3f4f6',
+              color: showAdmin ? '#ffffff' : '#374151'
+            }}
           >
-            <Settings className="w-5 h-5 text-gray-600" />
+            {showAdmin ? '👤 Клиентский вид' : '⚙️ Админ-панель'}
           </button>
         )}
       </div>
