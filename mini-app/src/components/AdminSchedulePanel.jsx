@@ -51,7 +51,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadWorkDays = async () => {
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       const data = await apiClient.getWorkDays(adminId);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
@@ -72,7 +72,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadDaySlots = async (date) => {
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       const data = await apiClient.getWorkDays(adminId);
       const dayData = data.find(d => d.day_date === date);
       setDaySlots(dayData?.slots || []);
@@ -95,7 +95,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       await apiClient.addTimeSlot(selectedDay, newSlot, adminId);
       setNewSlot('');
       loadDaySlots(selectedDay);
@@ -112,7 +112,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       await apiClient.deleteTimeSlot(selectedDay, slotTime, adminId);
       loadDaySlots(selectedDay);
     } catch (error) {
@@ -126,7 +126,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleToggleDay = async (date, isOpen) => {
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       const dateStr = format(date, 'yyyy-MM-dd');
       if (isOpen) {
         await apiClient.openDay(dateStr, adminId);
@@ -145,7 +145,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleAddWorkDay = async (date) => {
     try {
       setLoading(true);
-      const adminId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
+      const adminId = getAdminId();
       await apiClient.addWorkDay(
         format(date, 'yyyy-MM-dd'),
         ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'],
