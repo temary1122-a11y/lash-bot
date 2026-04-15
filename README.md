@@ -195,6 +195,20 @@ For issues and questions:
 - Check existing documentation
 - Review troubleshooting section in README
 
+## ☕ Support Development
+
+If this project helped you or your business, consider supporting its development:
+
+### GitHub Sponsors
+- **GitHub Sponsors:** [Sponsor on GitHub](https://github.com/sponsors/temary1122-a11y)
+
+### Cryptocurrency (no sanctions)
+- **USDT (TRC20):** `TUTexaGzjjNMVmBF8Nt3QgPmfG17sxQzJ2`
+- **USDT (ERC20):** `0x50ff8865d79d437d8c38f83d040eb3dd10c68a93`
+- **Ethereum (ETH):** `0x50ff8865d79d437d8c38f83d040eb3dd10c68a93`
+
+Your support helps maintain and improve the bot!
+
 ## 🗺 Roadmap
 
 - [ ] Payment integration
