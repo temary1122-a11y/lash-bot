@@ -14,6 +14,7 @@ from config import CHANNEL_LINK, PORTFOLIO_LINK
 def main_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="📅 Записаться", callback_data="book_start"))
+    builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-app-gamma-ashen.vercel.app")))
     builder.row(InlineKeyboardButton(text="❌ Отменить запись", callback_data="cancel_booking"))
     builder.row(
         InlineKeyboardButton(text="💰 Прайсы", callback_data="show_prices"),
