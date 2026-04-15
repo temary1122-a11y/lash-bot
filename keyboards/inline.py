@@ -13,14 +13,9 @@ from config import CHANNEL_LINK, PORTFOLIO_LINK
 # ────────────────────────────────────────────────────────────
 def main_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="📅 Записаться", callback_data="book_start"))
-    builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-app-gamma-ashen.vercel.app")))
-    builder.row(InlineKeyboardButton(text="❌ Отменить запись", callback_data="cancel_booking"))
-    builder.row(
-        InlineKeyboardButton(text="💰 Прайсы", callback_data="show_prices"),
-        InlineKeyboardButton(text="🖼 Портфолио", callback_data="show_portfolio"),
-    )
+    builder.row(InlineKeyboardButton(text="📅 Записаться", web_app=WebAppInfo(url="https://mini-app-gamma-ashen.vercel.app")))
     builder.row(InlineKeyboardButton(text="📋 Моя запись", callback_data="my_booking"))
+    builder.row(InlineKeyboardButton(text="❌ Отменить запись", callback_data="cancel_booking"))
     return builder.as_markup()
 
 
@@ -111,20 +106,7 @@ def back_to_main_kb() -> InlineKeyboardMarkup:
 def admin_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-app-gamma-ashen.vercel.app")))
-    builder.row(InlineKeyboardButton(text="📅 Просмотр расписания", callback_data="adm_view_schedule"))
-    builder.row(
-        InlineKeyboardButton(text="➕ Добавить рабочий день", callback_data="adm_add_day"),
-    )
-    builder.row(
-        InlineKeyboardButton(text="🔒 Закрыть день", callback_data="adm_close_day"),
-        InlineKeyboardButton(text="🔓 Открыть день", callback_data="adm_open_day"),
-    )
-    builder.row(
-        InlineKeyboardButton(text="➕ Добавить слот", callback_data="adm_add_slot"),
-        InlineKeyboardButton(text="🗑 Удалить слот", callback_data="adm_del_slot"),
-    )
-    builder.row(InlineKeyboardButton(text="❌ Отменить запись клиента", callback_data="adm_cancel_booking"))
-    builder.row(InlineKeyboardButton(text="🔙 В главное меню", callback_data="back_to_main"))
+    builder.row(InlineKeyboardButton(text=" В главное меню", callback_data="back_to_main"))
     return builder.as_markup()
 
 
