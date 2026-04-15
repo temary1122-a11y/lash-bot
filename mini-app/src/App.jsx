@@ -34,6 +34,10 @@ export default function App() {
       setShowAdmin(adminCheck);
       tg.ready();
       tg.expand();
+    } else {
+      // Если открыто не через Telegram, разрешаем админ-режим
+      setIsAdmin(true);
+      setShowAdmin(true);
     }
   }, []);
   

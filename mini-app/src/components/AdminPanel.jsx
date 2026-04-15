@@ -4,13 +4,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
-import { Palette, Image as ImageIcon, CalendarPlus, Calendar, Clock } from 'lucide-react';
+import { Palette, Image as ImageIcon, CalendarPlus, Calendar, Clock, FileText } from 'lucide-react';
 import AdminSchedulePanel from './AdminSchedulePanel';
 
 export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
   const [settings, setSettings] = useState(guiSettings);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('gui'); // 'gui' or 'dates'
+  const [activeTab, setActiveTab] = useState('gui'); // 'gui', 'dates', 'content'
   
   const handleColorChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -67,6 +67,20 @@ export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
           <div className="flex items-center justify-center gap-2">
             <Calendar className="w-5 h-5" />
             Даты
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('content')}
+          className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+            activeTab === 'content'
+              ? 'text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          style={{ backgroundColor: activeTab === 'content' ? settings.primary_color : '' }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <FileText className="w-5 h-5" />
+            Контент
           </div>
         </button>
       </div>
@@ -192,9 +206,98 @@ export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
             {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
           </button>
         </>
-      ) : (
+      ) : activeTab === 'dates' ? (
         <AdminSchedulePanel apiClient={apiClient} adminId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0} />
+      ) : (
+        <ContentPanel />
       )}
+    </div>
+  );
+}
+
+// Компонент для редактирования контента
+function ContentPanel() {
+  const [prices, setPrices] = useState('');
+  const [portfolioLink, setPortfolioLink] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    loadContent();
+  }, []);
+  
+  const loadContent = async () => {
+    try {
+      setLoading(true);
+      // Загрузка прайсов и портфолио из config
+      // Временно используем дефолтные значения
+      setPrices('💰 Прайсы\n\nКлассика — 2000₽\nОбъем — 2500₽\nПушистый — 3000₽');
+      setPortfolioLink('https://example.com/portfolio');
+    } catch (error) {
+      console.error('Error loading content:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      // Здесь будет сохранение на сервер
+      alert('Контент сохранён (функционал в разработке)');
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert('Ошибка при сохранении');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <FileText className="w-6 h-6 text-primary-500" />
+        <h2 className="text-xl font-semibold text-gray-800">Редактирование контента</h2>
+      </div>
+      
+      <div className="space-y-6">
+        {/* Прайсы */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Прайсы
+          </label>
+          <textarea
+            value={prices}
+            onChange={(e) => setPrices(e.target.value)}
+            rows={6}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Введите прайсы..."
+          />
+        </div>
+        
+        {/* Портфолио */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ссылка на портфолио
+          </label>
+          <input
+            type="url"
+            value={portfolioLink}
+            onChange={(e) => setPortfolioLink(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="https://example.com/portfolio"
+          />
+        </div>
+        
+        {/* Кнопка сохранения */}
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="w-full py-3 rounded-xl font-medium text-white transition-all hover:shadow-lg disabled:opacity-50"
+          style={{ backgroundColor: '#6366f1' }}
+        >
+          {loading ? 'Сохранение...' : 'Сохранить контент'}
+        </button>
+      </div>
     </div>
   );
 }

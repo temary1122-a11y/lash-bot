@@ -125,6 +125,16 @@ class ApiClient {
       body: JSON.stringify({ date }),
     });
   }
+
+  async deleteWorkDay(day_date) {
+    return this.request('/api/admin/delete-work-day', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ day_date }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient();

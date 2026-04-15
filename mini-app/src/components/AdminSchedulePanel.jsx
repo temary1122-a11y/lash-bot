@@ -21,12 +21,32 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const [daySlots, setDaySlots] = useState([]);
   const [newSlot, setNewSlot] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('calendar'); // calendar, slots
+  const [activeTab, setActiveTab] = useState('calendar'); // calendar, slots, clients
+  const [clients, setClients] = useState([]);
   
   // Загрузка рабочих дней
   useEffect(() => {
     loadWorkDays();
   }, [currentMonth]);
+  
+  // Загрузка клиентов при переключении на вкладку
+  useEffect(() => {
+    if (activeTab === 'clients') {
+      loadClients();
+    }
+  }, [activeTab]);
+  
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.getMyBookings();
+      setClients(data);
+    } catch (error) {
+      console.error('Error loading clients:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const loadWorkDays = async () => {
     try {
@@ -125,7 +145,8 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     try {
       setLoading(true);
       await apiClient.addWorkDay({
-        day_date: format(date, 'yyyy-MM-dd')
+        day_date: format(date, 'yyyy-MM-dd'),
+        slots: ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30']
       });
       loadWorkDays();
       setSelectedDay(format(date, 'yyyy-MM-dd'));
@@ -134,6 +155,25 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     } catch (error) {
       console.error('Error adding work day:', error);
       alert('Ошибка при добавлении рабочего дня');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleRemoveWorkDay = async (date) => {
+    try {
+      setLoading(true);
+      await apiClient.deleteWorkDay({
+        day_date: format(date, 'yyyy-MM-dd')
+      });
+      loadWorkDays();
+      if (selectedDay === format(date, 'yyyy-MM-dd')) {
+        setSelectedDay(null);
+        setActiveTab('calendar');
+      }
+    } catch (error) {
+      console.error('Error removing work day:', error);
+      alert('Ошибка при удалении рабочего дня');
     } finally {
       setLoading(false);
     }
@@ -186,6 +226,16 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
           >
             Слоты
           </button>
+          <button
+            onClick={() => setActiveTab('clients')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'clients' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Клиенты
+          </button>
         </div>
       </div>
       
@@ -226,8 +276,16 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
                 <div
                   key={index}
                   onClick={() => handleDayClick(date)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (status) {
+                      handleRemoveWorkDay(date);
+                    } else {
+                      handleAddWorkDay(date);
+                    }
+                  }}
                   className={`
-                    p-2 rounded-lg text-center cursor-pointer transition-all
+                    p-2 rounded-lg text-center cursor-pointer transition-all relative
                     ${isToday ? 'ring-2 ring-indigo-500' : ''}
                     ${status ? (
                       status.is_open 
@@ -240,6 +298,16 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
                   {status && status.slots?.length > 0 && (
                     <div className="text-xs mt-1">
                       {status.slots.length} слот(ов)
+                    </div>
+                  )}
+                  {!status && (
+                    <div className="absolute top-1 right-1">
+                      <Plus className="w-3 h-3 text-gray-400" />
+                    </div>
+                  )}
+                  {status && (
+                    <div className="absolute top-1 right-1">
+                      <Trash2 className="w-3 h-3 text-red-400" />
                     </div>
                   )}
                 </div>
@@ -351,6 +419,41 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      
+      {activeTab === 'clients' && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">👥 Записанные клиенты</h3>
+          {clients.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">Нет записанных клиентов</p>
+          ) : (
+            <div className="space-y-3">
+              {clients.map((client) => (
+                <div key={client.id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h4 className="font-medium">{client.client_name}</h4>
+                      <p className="text-sm text-gray-600">{client.phone}</p>
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      #{client.id}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className="w-4 h-4" />
+                      {client.day_date}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {client.slot_time}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
