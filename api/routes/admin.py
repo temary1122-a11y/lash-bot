@@ -54,16 +54,23 @@ async def update_gui_settings(settings: GUISettings):
 
 
 @router.post("/add-work-day")
-async def add_work_day_endpoint(request: AddWorkDayRequest, x_admin_id: int = Header(None)):
+async def add_work_day_endpoint(request: dict, x_admin_id: int = Header(None)):
     """Добавить рабочий день"""
     await verify_admin(x_admin_id)
+    print(f"DEBUG add-work-day: request={request}")
+
+    date = request.get("date")
+    time_slots = request.get("time_slots")
+
+    if not date:
+        raise HTTPException(status_code=422, detail="date is required")
 
     # Если time_slots не указаны или "default", используем стандартные
-    if not request.time_slots or request.time_slots == ["default"]:
+    if not time_slots or time_slots == ["default"]:
         from config import DEFAULT_TIME_SLOTS
-        request.time_slots = DEFAULT_TIME_SLOTS
+        time_slots = DEFAULT_TIME_SLOTS
 
-    success = add_work_day(request.date, request.time_slots)
+    success = add_work_day(date, time_slots)
     if success:
         return {"success": True, "message": "Рабочий день добавлен"}
     else:
@@ -71,11 +78,18 @@ async def add_work_day_endpoint(request: AddWorkDayRequest, x_admin_id: int = He
 
 
 @router.post("/add-time-slot")
-async def add_time_slot_endpoint(request: AddTimeSlotRequest, x_admin_id: int = Header(None)):
+async def add_time_slot_endpoint(request: dict, x_admin_id: int = Header(None)):
     """Добавить временной слот"""
     await verify_admin(x_admin_id)
+    print(f"DEBUG add-time-slot: request={request}")
 
-    success = add_time_slot(request.date, request.time)
+    date = request.get("date")
+    time = request.get("time")
+
+    if not date or not time:
+        raise HTTPException(status_code=422, detail="date and time are required")
+
+    success = add_time_slot(date, time)
     if success:
         return {"success": True, "message": "Слот добавлен"}
     else:
@@ -114,17 +128,23 @@ async def get_work_days_endpoint(x_admin_id: int = Header(None)):
 
 
 @router.post("/close-day")
-async def close_day_endpoint(date: str, x_admin_id: int = Header(None)):
+async def close_day_endpoint(request: dict, x_admin_id: int = Header(None)):
     """Закрыть рабочий день"""
     await verify_admin(x_admin_id)
+    date = request.get("date")
+    if not date:
+        raise HTTPException(status_code=422, detail="date is required")
     close_day(date)
     return {"success": True, "message": "День закрыт"}
 
 
 @router.post("/open-day")
-async def open_day_endpoint(date: str, x_admin_id: int = Header(None)):
+async def open_day_endpoint(request: dict, x_admin_id: int = Header(None)):
     """Открыть рабочий день"""
     await verify_admin(x_admin_id)
+    date = request.get("date")
+    if not date:
+        raise HTTPException(status_code=422, detail="date is required")
     open_day(date)
     return {"success": True, "message": "День открыт"}
 

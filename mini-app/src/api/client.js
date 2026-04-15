@@ -11,23 +11,44 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
+    console.group(`API Request: ${options.method || 'GET'} ${endpoint}`);
+    console.log('URL:', url);
+    console.log('Options:', options);
+
+    if (options.body) {
+      console.log('Body (string):', options.body);
+      try {
+        console.log('Body (parsed):', JSON.parse(options.body));
+      } catch (e) {
+        console.error('Body is not valid JSON!');
+      }
+    }
+
     try {
       const response = await fetch(url, {
+        ...options,
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
         },
-        ...options,
       });
-      
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      const data = await response.json();
+      console.log('Response data:', data);
+      console.groupEnd();
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(data.detail || `HTTP ${response.status}`);
       }
-      
-      return await response.json();
+
+      return data;
     } catch (error) {
-      console.error('API request error:', error);
+      console.error('Request failed:', error);
+      console.groupEnd();
       throw error;
     }
   }
@@ -75,22 +96,40 @@ class ApiClient {
   }
 
   async addWorkDay(date, timeSlots, adminId) {
+    console.log('addWorkDay called with:', { date, timeSlots, adminId });
+
+    const body = { date, time_slots: timeSlots };
+    console.log('Request body object:', body);
+    console.log('Body types:', {
+      date: typeof date,
+      time_slots: typeof timeSlots
+    });
+
     return this.request('/api/admin/add-work-day', {
       method: 'POST',
       headers: {
-        'x-admin-id': adminId,
+        'x-admin-id': String(adminId),
       },
-      body: JSON.stringify({ date, time_slots: timeSlots }),
+      body: JSON.stringify(body),
     });
   }
 
   async addTimeSlot(date, time, adminId) {
+    console.log('addTimeSlot called with:', { date, time, adminId });
+
+    const body = { date, time };
+    console.log('Request body object:', body);
+    console.log('Body types:', {
+      date: typeof date,
+      time: typeof time
+    });
+
     return this.request('/api/admin/add-time-slot', {
       method: 'POST',
       headers: {
-        'x-admin-id': adminId,
+        'x-admin-id': String(adminId),
       },
-      body: JSON.stringify({ date, time }),
+      body: JSON.stringify(body),
     });
   }
 
@@ -109,7 +148,6 @@ class ApiClient {
       method: 'POST',
       headers: {
         'x-admin-id': adminId,
-        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ date }),
     });
@@ -120,7 +158,6 @@ class ApiClient {
       method: 'POST',
       headers: {
         'x-admin-id': adminId,
-        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ date }),
     });
@@ -129,9 +166,6 @@ class ApiClient {
   async deleteWorkDay(day_date) {
     return this.request('/api/admin/delete-work-day', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ day_date }),
     });
   }
