@@ -96,12 +96,21 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     try {
       setLoading(true);
       const adminId = getAdminId();
+      
+      // Сначала убеждаемся что рабочий день существует
+      try {
+        await apiClient.addWorkDay(selectedDay, [], adminId);
+      } catch (e) {
+        // День уже существует - это нормально
+      }
+      
+      // Теперь добавляем слот
       await apiClient.addTimeSlot(selectedDay, newSlot, adminId);
       setNewSlot('');
       loadDaySlots(selectedDay);
     } catch (error) {
       console.error('Error adding slot:', error);
-      alert('Ошибка при добавлении слота');
+      alert('Ошибка при добавлении слота: ' + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -146,18 +155,27 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
     try {
       setLoading(true);
       const adminId = getAdminId();
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      // Сначала пытаемся добавить рабочий день
       await apiClient.addWorkDay(
-        format(date, 'yyyy-MM-dd'),
+        dateStr,
         ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'],
         adminId
       );
+      
       loadWorkDays();
-      setSelectedDay(format(date, 'yyyy-MM-dd'));
+      setSelectedDay(dateStr);
       setActiveTab('slots');
-      loadDaySlots(format(date, 'yyyy-MM-dd'));
+      loadDaySlots(dateStr);
     } catch (error) {
       console.error('Error adding work day:', error);
-      alert('Ошибка при добавлении рабочего дня');
+      // Если день уже существует, это не ошибка - просто переходим к слотам
+      const dateStr = format(date, 'yyyy-MM-dd');
+      loadWorkDays();
+      setSelectedDay(dateStr);
+      setActiveTab('slots');
+      loadDaySlots(dateStr);
     } finally {
       setLoading(false);
     }
