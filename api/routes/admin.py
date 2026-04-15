@@ -203,68 +203,7 @@ async def delete_work_day_endpoint(request: DeleteWorkDayRequest, x_admin_id: in
 
 @router.post("/cleanup-database")
 async def cleanup_database_endpoint(x_admin_id: int = Header(None)):
-    """Очистить базу данных от дубликатов"""
-    await verify_admin(x_admin_id)
-
-    import sqlite3
-    from database.db import get_conn
-
-    with get_conn() as conn:
-        cursor = conn.cursor()
-
-        # Удаление дубликатов в time_slots
-        cursor.execute("""
-            DELETE FROM time_slots
-            WHERE id NOT IN (
-                SELECT MAX(id)
-                FROM time_slots
-                GROUP BY day_date, slot_time
-            )
-        """)
-        deleted_slots = cursor.rowcount
-
-        # Удаление дубликатов в bookings
-        cursor.execute("""
-            DELETE FROM bookings
-            WHERE id NOT IN (
-                SELECT MAX(id)
-                FROM bookings
-                GROUP BY day_date, slot_time
-            )
-        """)
-        deleted_bookings = cursor.rowcount
-
-        # Удаление orphan слотов
-        cursor.execute("""
-            DELETE FROM time_slots
-            WHERE day_date NOT IN (SELECT day_date FROM work_days)
-        """)
-        orphan_slots = cursor.rowcount
-
-        conn.commit()
-
-    # Статистика
-    from database.db import get_all_work_days, get_all_time_slots, get_all_bookings
-    work_days_count = len(get_all_work_days())
-    time_slots_count = len(get_all_time_slots())
-    bookings_count = len(get_all_bookings())
-
-    return {
-        "success": True,
-        "deleted_slots": deleted_slots,
-        "deleted_bookings": deleted_bookings,
-        "orphan_slots": orphan_slots,
-        "stats": {
-            "work_days": work_days_count,
-            "time_slots": time_slots_count,
-            "bookings": bookings_count
-        }
-    }
-
-
-@router.post("/clear-all-data")
-async def clear_all_data_endpoint(x_admin_id: int = Header(None)):
-    """Полностью очистить базу данных (ОСТОРОЖНО!)"""
+    """Полностью очистить базу данных"""
     await verify_admin(x_admin_id)
 
     from database.db import get_conn
