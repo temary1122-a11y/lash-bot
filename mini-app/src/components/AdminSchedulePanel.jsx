@@ -51,16 +51,15 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadWorkDays = async () => {
     try {
       setLoading(true);
-      const adminId = getAdminId();
       const data = await apiClient.getWorkDays(adminId);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
-      
+
       const filteredDays = data.filter(day => {
         const dayDate = new Date(day.day_date);
         return dayDate >= monthStart && dayDate <= monthEnd;
       });
-      
+
       setWorkDays(filteredDays);
     } catch (error) {
       console.error('Error loading work days:', error);
@@ -72,7 +71,6 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const loadDaySlots = async (date) => {
     try {
       setLoading(true);
-      const adminId = getAdminId();
       console.log('Loading day slots for:', { date, adminId });
       const data = await apiClient.getWorkDays(adminId);
       console.log('Work days data:', data);
@@ -96,12 +94,11 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   
   const handleAddSlot = async () => {
     if (!selectedDay || !newSlot) return;
-    
+
     try {
       setLoading(true);
-      const adminId = getAdminId();
       console.log('Adding slot:', { selectedDay, newSlot, adminId });
-      
+
       // Сначала убеждаемся что рабочий день существует
       try {
         await apiClient.addWorkDay(selectedDay, [], adminId);
@@ -109,7 +106,7 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
         // День уже существует - это нормально
         console.log('Work day already exists or error:', e);
       }
-      
+
       // Теперь добавляем слот
       await apiClient.addTimeSlot(selectedDay, newSlot, adminId);
       setNewSlot('');
@@ -124,10 +121,9 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   
   const handleDeleteSlot = async (slotTime) => {
     if (!selectedDay) return;
-    
+
     try {
       setLoading(true);
-      const adminId = getAdminId();
       await apiClient.deleteTimeSlot(selectedDay, slotTime, adminId);
       loadDaySlots(selectedDay);
     } catch (error) {
@@ -141,7 +137,6 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleToggleDay = async (date, isOpen) => {
     try {
       setLoading(true);
-      const adminId = getAdminId();
       const dateStr = format(date, 'yyyy-MM-dd');
       if (isOpen) {
         await apiClient.openDay(dateStr, adminId);
@@ -160,16 +155,15 @@ export default function AdminSchedulePanel({ apiClient, adminId }) {
   const handleAddWorkDay = async (date) => {
     try {
       setLoading(true);
-      const adminId = getAdminId();
       const dateStr = format(date, 'yyyy-MM-dd');
-      
+
       // Сначала пытаемся добавить рабочий день
       await apiClient.addWorkDay(
         dateStr,
         ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'],
         adminId
       );
-      
+
       loadWorkDays();
       setSelectedDay(dateStr);
       setActiveTab('slots');

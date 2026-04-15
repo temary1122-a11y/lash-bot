@@ -207,7 +207,7 @@ export default function AdminPanel({ guiSettings, onSettingsUpdate }) {
           </button>
         </>
       ) : activeTab === 'dates' ? (
-        <AdminSchedulePanel apiClient={apiClient} adminId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0} />
+        <AdminSchedulePanel apiClient={apiClient} adminId={8736987138} />
       ) : (
         <ContentPanel />
       )}
