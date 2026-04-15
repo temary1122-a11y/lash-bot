@@ -182,10 +182,23 @@ export default function App() {
         />
       ) : (
         <>
+          {/* Кнопка для входа в админ-режим (всегда видна) */}
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                setIsAdmin(true);
+                setShowAdmin(true);
+              }}
+              className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+            >
+              ⚙️ Войти в админ-панель
+            </button>
+          </div>
+          
           {availableDates.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
               <p className="text-gray-600">Нет доступных дат для записи.</p>
-              <p className="text-sm text-gray-500 mt-2">Добавьте рабочие дни через админ-панель бота.</p>
+              <p className="text-sm text-gray-500 mt-2">Добавьте рабочие дни через админ-панель.</p>
             </div>
           ) : (
             <>
