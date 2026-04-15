@@ -28,7 +28,7 @@ async def get_available_dates():
         for day in work_days:
             slots = get_free_slots(day[1])  # day[1] = day_date
             time_slots = [
-                TimeSlot(time=slot[1], available=True)  # slot[1] = slot_time
+                TimeSlot(time=slot[2], available=True)  # slot[2] = slot_time (исправлено)
                 for slot in slots
             ]
             result.append(
