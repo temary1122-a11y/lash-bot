@@ -12,30 +12,31 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
   }, [duration, onClose]);
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-500" />,
-    error: <AlertCircle className="w-5 h-5 text-red-500" />,
-    info: <Info className="w-5 h-5 text-blue-500" />,
+    success: <CheckCircle className="w-5 h-5 text-sage" />,
+    error: <AlertCircle className="w-5 h-5 text-blush" />,
+    info: <Info className="w-5 h-5 text-blush" />,
   };
 
   const colors = {
-    success: 'border-green-500 bg-green-50',
-    error: 'border-red-500 bg-red-50',
-    info: 'border-blue-500 bg-blue-50',
+    success: 'border-sage bg-sage/10',
+    error: 'border-blush bg-blush/10',
+    info: 'border-blush bg-blush/10',
   };
 
   return (
     <div className={`
       fixed top-4 right-4 z-50
       flex items-center gap-3 px-4 py-3
-      rounded-lg shadow-lg border-l-4
+      rounded-xl shadow-warm-lg border-l-4 backdrop-blur-xl
       ${colors[type]}
-      animate-slide-in
+      animate-bounce-in
+      liquid-glass
     `}>
       {icons[type]}
-      <span className="text-sm font-medium text-gray-800">{message}</span>
+      <span className="text-sm font-medium text-warm-text">{message}</span>
       <button
         onClick={onClose}
-        className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+        className="ml-2 text-warm-text-tertiary hover:text-warm-text transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

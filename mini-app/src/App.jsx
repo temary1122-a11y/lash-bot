@@ -9,11 +9,39 @@ import BookingForm from './components/BookingForm';
 import AdminPanel from './components/AdminPanel';
 import Toast from './components/Toast';
 import { apiClient } from './api/client';
-import { Calendar as CalendarIcon, Settings, Menu } from 'lucide-react';
+import { Calendar as CalendarIcon, Settings, Menu, Sun, Moon } from 'lucide-react';
 
 // Version check
 console.log('🚨 LASH MINI APP ROOT v2025-04-15.23 LOADED');
 console.log('Build timestamp:', new Date().toISOString());
+
+// Хук для определения темы Telegram
+const useTelegramTheme = () => {
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+      // Получить текущую тему
+      const colorScheme = tg.colorScheme || 'light';
+      setTheme(colorScheme);
+
+      // Слушать изменения темы
+      const handleThemeChange = () => {
+        setTheme(tg.colorScheme || 'light');
+      };
+
+      tg.onEvent('themeChanged', handleThemeChange);
+
+      return () => {
+        tg.offEvent('themeChanged', handleThemeChange);
+      };
+    }
+  }, []);
+
+  return theme;
+};
 
 // Admin ID - должен совпадать с ADMIN_ID в .env
 const ADMIN_ID = 8736987138;
@@ -77,7 +105,29 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [toast, setToast] = useState(null);
-  
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Telegram theme detection
+  const telegramTheme = useTelegramTheme();
+
+  // Применяем тему Telegram
+  useEffect(() => {
+    if (telegramTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, [telegramTheme]);
+
+  // Переключение темы вручную
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+    triggerHaptic('light');
+  };
+
   // Telegram WebApp integration
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -204,7 +254,8 @@ export default function App() {
   // Применяем настройки GUI
   useEffect(() => {
     if (guiSettings) {
-      document.body.style.backgroundColor = guiSettings.background_color;
+      // Не устанавливаем backgroundColor - используем градиент из Calendar
+      // document.body.style.backgroundColor = guiSettings.background_color;
       if (guiSettings.background_image) {
         document.body.style.backgroundImage = `url(${guiSettings.background_image})`;
         document.body.style.backgroundSize = 'cover';
@@ -216,39 +267,49 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        <div className="spinner-warm"></div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen p-4" style={{ backgroundColor: guiSettings?.background_color || '#ffffff' }}>
+    <div
+      className="min-h-screen p-4"
+      style={{
+        background: 'linear-gradient(135deg, #e8d0bc 0%, #d4b99e 40%, #c9a98c 100%)',
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-6 h-6" style={{ color: guiSettings?.primary_color }} />
-          <h1 className="text-xl font-bold text-gray-800">
+          <CalendarIcon className="w-6 h-6 text-warm-emerald" />
+          <h1 className="text-xl font-bold text-warm-brown">
             {showAdmin ? 'Админ-панель' : 'Запись на наращивание'}
           </h1>
         </div>
-        {isAdmin && (
+        <div className="flex items-center gap-2">
+          {/* Кнопка переключения темы */}
           <button
-            onClick={() => setShowAdmin(!showAdmin)}
-            className="px-3 py-1 rounded-full text-sm font-medium transition-colors"
-            style={{ 
-              backgroundColor: showAdmin ? guiSettings?.primary_color : '#f3f4f6',
-              color: showAdmin ? '#ffffff' : '#374151'
-            }}
+            onClick={toggleTheme}
+            className="btn-icon-warm"
+            title={isDarkMode ? 'Светлая тема' : 'Тёмная тема'}
           >
-            {showAdmin ? '👤 Клиентский вид' : '⚙️ Админ-панель'}
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-        )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowAdmin(!showAdmin)}
+              className="px-3 py-1 rounded-full text-sm font-medium transition-colors btn-secondary-warm h-10"
+            >
+              {showAdmin ? '👤 Клиентский вид' : '⚙️ Админ-панель'}
+            </button>
+          )}
+        </div>
       </div>
       
       {showAdmin ? (
         <AdminPanel
           guiSettings={guiSettings}
-          onSettingsUpdate={handleSettingsUpdate}
         />
       ) : (
         <>
@@ -260,17 +321,60 @@ export default function App() {
                 setShowAdmin(true);
                 loadData(); // Перезагружаем данные с новым isAdmin
               }}
-              className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              className="w-full py-3 px-4 btn-secondary-warm text-sm"
             >
               ⚙️ Войти в админ-панель
             </button>
           </div>
           
           {availableDates.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-              <p className="text-gray-600">Нет доступных дат для записи.</p>
-              <p className="text-sm text-gray-500 mt-2">Добавьте рабочие дни через админ-панель.</p>
-            </div>
+            <>
+              <div className="liquid-glass-heavy p-6 text-center mb-4">
+                <p className="text-warm-text">Нет доступных дат для записи.</p>
+                <p className="text-sm text-warm-text-secondary mt-2">Добавьте рабочие дни через админ-панель.</p>
+              </div>
+
+              {/* Кнопки-ссылки */}
+              <div className="space-y-3">
+                <a
+                  href={import.meta.env.VITE_PRICES_POST_LINK || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-lg font-semibold text-warm-text">💰 Прайсы</span>
+                  </div>
+                  <p className="text-sm text-warm-text-secondary mt-1">Посмотреть цены на услуги</p>
+                </a>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <a
+                    href={import.meta.env.VITE_TIKTOK_LINK || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xl">🎵</span>
+                      <span className="text-sm font-semibold text-warm-text">TikTok</span>
+                    </div>
+                  </a>
+
+                  <a
+                    href={import.meta.env.VITE_INSTAGRAM_LINK || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xl">📸</span>
+                      <span className="text-sm font-semibold text-warm-text">Instagram</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </>
           ) : (
             <>
               <Calendar
@@ -279,6 +383,7 @@ export default function App() {
                 onDateSelect={handleDateSelect}
                 guiSettings={guiSettings}
                 triggerHaptic={triggerHaptic}
+                isAdmin={isAdmin}
               />
 
               {selectedDate && !showBookingForm && (
@@ -297,8 +402,50 @@ export default function App() {
                   time={selectedTime}
                   onSubmit={handleBookingSubmit}
                   guiSettings={guiSettings}
+                  triggerHaptic={triggerHaptic}
                 />
               )}
+
+              {/* Кнопки-ссылки */}
+              <div className="mt-6 space-y-3">
+                <a
+                  href={import.meta.env.VITE_PRICES_POST_LINK || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-lg font-semibold text-warm-text">💰 Прайсы</span>
+                  </div>
+                  <p className="text-sm text-warm-text-secondary mt-1">Посмотреть цены на услуги</p>
+                </a>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <a
+                    href={import.meta.env.VITE_TIKTOK_LINK || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xl">🎵</span>
+                      <span className="text-sm font-semibold text-warm-text">TikTok</span>
+                    </div>
+                  </a>
+
+                  <a
+                    href={import.meta.env.VITE_INSTAGRAM_LINK || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 liquid-glass rounded-xl hover:bg-white/50 transition-all duration-200 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xl">📸</span>
+                      <span className="text-sm font-semibold text-warm-text">Instagram</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
             </>
           )}
         </>

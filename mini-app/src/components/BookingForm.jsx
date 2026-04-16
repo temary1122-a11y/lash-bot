@@ -5,14 +5,13 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Phone, User } from 'lucide-react';
 
-export default function BookingForm({ date, time, onSubmit, guiSettings }) {
+export default function BookingForm({ date, time, onSubmit, guiSettings, triggerHaptic }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoFilled, setAutoFilled] = useState(false);
 
-  const primaryColor = guiSettings?.primary_color || '#6366f1';
   const services = guiSettings?.services || [];
 
   // Автовыбор первой услуги если есть
@@ -45,6 +44,7 @@ export default function BookingForm({ date, time, onSubmit, guiSettings }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    triggerHaptic?.('medium');
 
     try {
       await onSubmit({ name, phone, serviceId: selectedService });
@@ -56,38 +56,39 @@ export default function BookingForm({ date, time, onSubmit, guiSettings }) {
   };
 
   return (
-    <div className="card p-6 animate-slide-up">
-      <h3 className="text-lg font-semibold text-neutral-900 mb-4">Оформление записи</h3>
+    <div className="liquid-glass-heavy p-6 animate-slide-up">
+      <h3 className="text-lg font-semibold text-warm-text mb-4">Оформление записи</h3>
 
-      <div className="mb-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-        <p className="text-sm text-neutral-600">Дата: <span className="font-medium text-neutral-900">{date}</span></p>
-        <p className="text-sm text-neutral-600">Время: <span className="font-medium text-neutral-900">{time}</span></p>
+      <div className="mb-4 p-4 liquid-glass-subtle rounded-xl">
+        <p className="text-sm text-warm-text-secondary">Дата: <span className="font-medium text-warm-text">{date}</span></p>
+        <p className="text-sm text-warm-text-secondary">Время: <span className="font-medium text-warm-text">{time}</span></p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">
+          <label className="block text-sm font-medium text-warm-text mb-2">
             Ваше имя
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-warm-text-tertiary w-5 h-5" />
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="input pl-10"
+              className="input-warm pl-10"
               placeholder="Введите имя"
+              onFocus={() => triggerHaptic?.('light')}
             />
           </div>
           {autoFilled && (
-            <p className="text-xs text-success-dark mt-1">✓ Автозаполнено из Telegram</p>
+            <p className="text-xs text-sage mt-1">✓ Автозаполнено из Telegram</p>
           )}
         </div>
 
         {services.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-warm-text mb-2">
               Выберите услугу
             </label>
             <div className="grid grid-cols-1 gap-2">
@@ -95,19 +96,29 @@ export default function BookingForm({ date, time, onSubmit, guiSettings }) {
                 <button
                   key={service.id}
                   type="button"
-                  onClick={() => setSelectedService(service.id)}
+                  onClick={() => {
+                    setSelectedService(service.id);
+                    triggerHaptic?.('selection');
+                  }}
                   className={`
-                    p-3 rounded-xl text-left transition-all
+                    w-full p-4 rounded-xl text-left transition-all duration-200 ease-out
+                    backdrop-blur-2xl bg-white/75 relative
+                    flex justify-between items-center
                     ${selectedService === service.id
-                      ? 'bg-primary-50 border-2 border-primary-500 text-primary-900'
-                      : 'bg-white border border-neutral-200 hover:border-primary-300 text-neutral-700'
+                      ? 'bg-blush/15 border-2 border-blush shadow-[0_4px_16px_rgba(216,167,182,0.2)]'
+                      : 'border border-warm-border/50 hover:bg-white/[0.85] hover:border-blush/30 hover:shadow-warm-md hover:-translate-y-0.5'
                     }
                   `}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">{service.name}</span>
-                    <span className="text-sm font-semibold">{service.price} ₽</span>
+                    <span className="font-medium text-warm-text">{service.name}</span>
+                    <span className="text-sm font-semibold text-blush">{service.price} ₽</span>
                   </div>
+                  {selectedService === service.id && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="w-4 h-4 text-blush" />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -115,18 +126,19 @@ export default function BookingForm({ date, time, onSubmit, guiSettings }) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">
+          <label className="block text-sm font-medium text-warm-text mb-2">
             Телефон
           </label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-warm-text-tertiary w-5 h-5" />
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              className="input pl-10"
+              className="input-warm pl-10"
               placeholder="+7 (999) 999-99-99"
+              onFocus={() => triggerHaptic?.('light')}
             />
           </div>
         </div>
@@ -134,11 +146,13 @@ export default function BookingForm({ date, time, onSubmit, guiSettings }) {
         <button
           type="submit"
           disabled={isSubmitting || !name || !phone}
-          className="btn-primary w-full btn-lg flex items-center justify-center gap-2"
-          style={{ backgroundColor: primaryColor }}
+          className="btn-primary-warm w-full h-14 flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
-            'Отправка...'
+            <>
+              <div className="spinner-warm" />
+              <span>Отправка...</span>
+            </>
           ) : (
             <>
               <Check className="w-5 h-5" />
