@@ -134,24 +134,39 @@ export default function App() {
     console.log('window.Telegram exists:', !!window.Telegram);
     console.log('window.Telegram.WebApp exists:', !!window.Telegram?.WebApp);
 
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram?.WebApp;
-      const userId = tg?.initDataUnsafe?.user?.id;
-      // Проверяем только реальный userId, не используем fallback на 0
-      const adminCheck = userId === ADMIN_ID;
-      console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
-      console.log('initDataUnsafe:', tg.initDataUnsafe);
-      setIsAdmin(adminCheck);
-      // Админ видит админ-панель по умолчанию
-      setShowAdmin(adminCheck);
-      tg.ready();
-      tg.expand();
-      console.log('=== TELEGRAM WEBAPP READY ===');
-    } else {
-      // Если открыто не через Telegram, разрешаем админ-режим
-      console.log('Not opened via Telegram, setting admin mode');
-      setIsAdmin(true);
-      setShowAdmin(true);
+    try {
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id;
+
+        // Если userId не доступен на телефоне, показываем клиентский режим
+        const adminCheck = userId === ADMIN_ID;
+        console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
+        console.log('initDataUnsafe:', tg.initDataUnsafe);
+
+        setIsAdmin(adminCheck);
+        setShowAdmin(adminCheck);
+
+        try {
+          tg.ready();
+          tg.expand();
+          console.log('=== TELEGRAM WEBAPP READY ===');
+        } catch (e) {
+          console.error('Telegram WebApp ready/expand error:', e);
+          // Продолжаем работу даже если ready/expand не сработали
+        }
+      } else {
+        // Если открыто не через Telegram, разрешаем админ-режим
+        console.log('Not opened via Telegram, setting client mode');
+        setIsAdmin(false);
+        setShowAdmin(false);
+      }
+    } catch (error) {
+      console.error('Telegram WebApp initialization error:', error);
+      // Fallback: клиентский режим если ошибка
+      console.log('Fallback to client mode due to error');
+      setIsAdmin(false);
+      setShowAdmin(false);
     }
   }, []);
   
@@ -192,6 +207,7 @@ export default function App() {
           console.error('=== ERROR loading dates ===', e);
           console.error('Error message:', e.message);
           console.error('Error stack:', e.stack);
+          // Возвращаем пустой массив вместо ошибки
           return [];
         });
         console.log('Dates loaded:', dates);
@@ -203,6 +219,16 @@ export default function App() {
       console.error('=== CATCH ERROR in loadData ===', error);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
+      // Устанавливаем дефолтные значения при ошибке
+      setGuiSettings({
+        background_color: '#ffffff',
+        primary_color: '#6366f1',
+        secondary_color: '#8b5cf6',
+        text_color: '#1f2937',
+        calendar_style: 'modern',
+        background_image: null
+      });
+      setAvailableDates([]);
     } finally {
       console.log('=== LOAD DATA END, setting loading to false ===');
       setLoading(false);
