@@ -214,7 +214,7 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                 border border-white/40 overflow-hidden
                 ${notCurrentMonth
                   ? 'bg-warm-card/35 backdrop-blur-[16px] shadow-warm-sm opacity-55'
-                  : `bg-warm-card/80 backdrop-blur-[28px]
+                  : `bg-warm-card/80 backdrop-blur-[28px] bg-opacity-85
                      shadow-[0_4px_16px_rgba(120,80,40,0.10),0_1px_0_rgba(255,248,240,0.8)_inset]
                      hover:shadow-[0_8px_24px_rgba(120,80,40,0.18),0_1px_0_rgba(255,248,240,0.8)_inset]
                      hover:bg-warm-card/95 hover:-translate-y-[1px]`
@@ -223,7 +223,7 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                 ${selected ? 'ring-2 ring-warm-slot-bg/70' : ''}
                 ${today && !selected ? 'ring-1 ring-warm-slot-bg/40' : ''}
               `}
-              style={{ minHeight: '72px' }}
+              style={{ minHeight: '96px', WebkitBackdropFilter: 'blur(28px)' }}
             >
               {/* Верхняя строка: номер + кнопки */}
               <div className="flex items-start justify-between mb-1">
@@ -270,14 +270,14 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                     }}
                     className={`
                       w-full text-center text-xs font-semibold
-                      px-2 py-[5px] rounded-2xl
+                      px-3 py-[5px] rounded-full
                       transition-all duration-200 select-none active:scale-95
                       ${isAdmin && !slot.available
                         ? 'bg-rose-100 text-rose-700/80 border border-rose-200'
                         : 'bg-warm-slot-bg text-warm-slot-text shadow-[0_2px_6px_rgba(80,120,50,0.25)] hover:bg-warm-slot-light'
                       }
                     `}
-                    style={{ backdropFilter: 'blur(4px)', letterSpacing: '0.01em' }}
+                    style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', letterSpacing: '0.01em' }}
                   >
                     {slot.time}
                   </button>
@@ -291,9 +291,9 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                       e.stopPropagation();
                       toggleExpanded(dateStr);
                     }}
-                    className="text-left text-[10px] font-semibold text-warm-emerald hover:text-warm-brown-2 px-1 pt-[1px] transition-colors"
+                    className="h-6 sm:h-7 px-2.5 sm:px-3 rounded-full bg-white/30 border border-white/40 text-warm-brown/80 text-[11px] sm:text-xs font-medium self-start hover:bg-white/40 active:scale-95 transition"
                   >
-                    + ещё {overflowCount}
+                    +{overflowCount}
                   </button>
                 )}
 
@@ -322,14 +322,14 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                               }}
                               className={`
                                 w-full text-center text-xs font-semibold
-                                px-2 py-[5px] rounded-2xl
+                                px-3 py-[5px] rounded-full
                                 transition-all duration-200 select-none active:scale-95
                                 ${isAdmin && !slot.available
                                   ? 'bg-rose-100 text-rose-700/80 border border-rose-200'
                                   : 'bg-warm-slot-bg text-warm-slot-text shadow-[0_2px_6px_rgba(80,120,50,0.25)] hover:bg-warm-slot-light'
                                 }
                               `}
-                              style={{ backdropFilter: 'blur(4px)', letterSpacing: '0.01em' }}
+                              style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', letterSpacing: '0.01em' }}
                             >
                               {slot.time}
                             </button>
