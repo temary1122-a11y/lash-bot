@@ -54,7 +54,7 @@ PRICE_TEXT: str = (
 PORTFOLIO_LINK: str = "https://ru.pinterest.com/crystalwithluv/_created/"
 
 # ── Ссылка на пост с прайсами в группе ────────────────────────
-PRICES_POST_LINK: str = os.getenv("PRICES_POST_LINK", "https://t.me/your_channel/123")
+PRICES_POST_LINK: str = os.getenv("PRICES_POST_LINK", "https://t.me/lashessoto4ka/285")
 
 # ── Рабочие часы по умолчанию (используются при инициализации) ─
 DEFAULT_TIME_SLOTS: list[str] = [
