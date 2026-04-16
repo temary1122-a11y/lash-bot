@@ -268,8 +268,8 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                       handleDateClick(date, slot.time);
                     }}
                     className={`
-                      w-full text-center text-xs sm:text-sm font-semibold
-                      px-1.5 sm:px-2 py-[3px] sm:py-[5px] rounded-2xl
+                      w-full text-center text-xs font-semibold
+                      px-2 py-[5px] rounded-2xl
                       transition-all duration-200 select-none active:scale-95
                       ${isAdmin && !slot.available
                         ? 'bg-rose-100 text-rose-700/80 border border-rose-200'
@@ -320,8 +320,8 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
                                 handleDateClick(date, slot.time);
                               }}
                               className={`
-                                w-full text-center text-xs sm:text-sm font-semibold
-                                px-1.5 sm:px-2 py-[3px] sm:py-[5px] rounded-2xl
+                                w-full text-center text-xs font-semibold
+                                px-2 py-[5px] rounded-2xl
                                 transition-all duration-200 select-none active:scale-95
                                 ${isAdmin && !slot.available
                                   ? 'bg-rose-100 text-rose-700/80 border border-rose-200'

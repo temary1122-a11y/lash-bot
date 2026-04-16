@@ -15,13 +15,13 @@ export default function TimeSlots({ slots, selectedTime, onTimeSelect, guiSettin
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold text-warm-text mb-4">Выберите время</h3>
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {slots?.filter(slot => slot.available).map((slot) => (
           <button
             key={slot.time}
             onClick={() => handleSlotClick(slot)}
             className={`
-              min-h-[48px] sm:min-h-[52px] p-2 sm:p-3 rounded-xl font-medium transition-all duration-200 ease-out
+              min-h-[56px] p-3 rounded-xl font-medium transition-all duration-200 ease-out
               flex flex-col items-center justify-center gap-1
               backdrop-blur-2xl
               ${selectedTime === slot.time
@@ -30,7 +30,7 @@ export default function TimeSlots({ slots, selectedTime, onTimeSelect, guiSettin
               }
             `}
           >
-            <span className="text-sm sm:text-base font-medium">{slot.time}</span>
+            <span className="text-base font-medium">{slot.time}</span>
           </button>
         ))}
       </div>
