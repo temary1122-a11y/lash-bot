@@ -134,6 +134,12 @@ export default function App() {
     console.log('window.Telegram exists:', !!window.Telegram);
     console.log('window.Telegram.WebApp exists:', !!window.Telegram?.WebApp);
 
+    // Скрываем loading элемент
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+
     try {
       if (window.Telegram?.WebApp) {
         const tg = window.Telegram?.WebApp;
