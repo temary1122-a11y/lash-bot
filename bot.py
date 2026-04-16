@@ -60,13 +60,11 @@ async def on_startup(bot: Bot) -> None:
 async def set_bot_commands(bot: Bot) -> None:
     """Устанавливает команды меню бота."""
     commands = [
-        BotCommand(command="start", description="🚀 Начать / Главное меню"),
-        BotCommand(command="menu", description="📋 Главное меню"),
+        BotCommand(command="start", description="🚀 Главное меню"),
         BotCommand(command="book", description="📅 Записаться"),
         BotCommand(command="cancel", description="❌ Отменить запись"),
         BotCommand(command="mybooking", description="📋 Моя запись"),
         BotCommand(command="prices", description="💰 Прайсы"),
-        BotCommand(command="portfolio", description="🖼 Портфолио"),
         BotCommand(command="admin", description="⚙️ Админ-панель"),
     ]
     

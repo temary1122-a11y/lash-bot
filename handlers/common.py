@@ -8,8 +8,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from config import PRICE_TEXT, CHANNEL_ID, ADMIN_ID
-from keyboards import main_menu_kb, portfolio_kb, subscription_check_kb, admin_menu_kb, back_to_main_kb
+from config import PRICE_TEXT, CHANNEL_ID, ADMIN_ID, PRICES_POST_LINK
+from keyboards import main_menu_kb, subscription_check_kb, admin_menu_kb, back_to_main_kb
 from utils import check_subscription
 
 logger = logging.getLogger(__name__)
@@ -30,19 +30,6 @@ async def cmd_start(message: Message, state: FSMContext, bot: Bot):
         f"✨ Выберите нужный раздел:"
     )
     await message.answer(welcome_text, parse_mode="HTML", reply_markup=main_menu_kb())
-
-
-# ────────────────────────────────────────────────────────────
-# /menu — возврат в главное меню
-# ────────────────────────────────────────────────────────────
-@router.message(Command("menu"))
-async def cmd_menu(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        "📋 <b>Главное меню</b>",
-        parse_mode="HTML",
-        reply_markup=main_menu_kb()
-    )
 
 
 # ────────────────────────────────────────────────────────────
@@ -112,20 +99,12 @@ async def cmd_mybooking(message: Message):
 @router.message(Command("prices"))
 async def cmd_prices(message: Message):
     """Быстрая команда для просмотра прайсов."""
-    await message.answer(PRICE_TEXT, parse_mode="HTML", reply_markup=back_to_main_kb())
-
-
-# ────────────────────────────────────────────────────────────
-# /portfolio — портфолио
-# ────────────────────────────────────────────────────────────
-@router.message(Command("portfolio"))
-async def cmd_portfolio(message: Message):
-    """Быстрая команда для просмотра портфолио."""
     await message.answer(
-        "🖼 <b>Моё портфолио</b>\n\nПосмотрите мои работы по ссылке ниже 👇",
+        "💰 <b>Прайс-лист</b>\n\nПосмотрите прайсы по ссылке ниже 👇",
         parse_mode="HTML",
-        reply_markup=portfolio_kb()
+        reply_markup=back_to_main_kb()
     )
+    await message.answer(PRICES_POST_LINK)
 
 
 # ────────────────────────────────────────────────────────────
@@ -157,36 +136,18 @@ async def show_prices(callback: CallbackQuery):
     await callback.answer()
     try:
         await callback.message.edit_text(
-            PRICE_TEXT,
+            "💰 <b>Прайс-лист</b>\n\nПосмотрите прайсы по ссылке ниже 👇",
             parse_mode="HTML",
             reply_markup=back_to_main_kb()
         )
+        await callback.message.answer(PRICES_POST_LINK)
     except Exception:
         await callback.message.answer(
-            PRICE_TEXT,
+            "💰 <b>Прайс-лист</b>\n\nПосмотрите прайсы по ссылке ниже 👇",
             parse_mode="HTML",
             reply_markup=back_to_main_kb()
         )
-
-
-# ────────────────────────────────────────────────────────────
-# Портфолио
-# ────────────────────────────────────────────────────────────
-@router.callback_query(F.data == "show_portfolio")
-async def show_portfolio(callback: CallbackQuery):
-    await callback.answer()
-    try:
-        await callback.message.edit_text(
-            "🖼 <b>Моё портфолио</b>\n\nПосмотрите мои работы по ссылке ниже 👇",
-            parse_mode="HTML",
-            reply_markup=portfolio_kb()
-        )
-    except Exception:
-        await callback.message.answer(
-            "🖼 <b>Моё портфолио</b>\n\nПосмотрите мои работы по ссылке ниже 👇",
-            parse_mode="HTML",
-            reply_markup=portfolio_kb()
-        )
+        await callback.message.answer(PRICES_POST_LINK)
 
 
 # ────────────────────────────────────────────────────────────
