@@ -273,12 +273,7 @@ export default function App() {
   }
   
   return (
-    <div
-      className="min-h-screen p-4"
-      style={{
-        background: 'linear-gradient(135deg, #e8d0bc 0%, #d4b99e 40%, #c9a98c 100%)',
-      }}
-    >
+    <div className="min-h-screen p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
