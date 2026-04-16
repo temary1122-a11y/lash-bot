@@ -130,17 +130,23 @@ export default function App() {
 
   // Telegram WebApp integration
   useEffect(() => {
+    console.log('=== TELEGRAM WEBAPP INIT START ===');
+    console.log('window.Telegram exists:', !!window.Telegram);
+    console.log('window.Telegram.WebApp exists:', !!window.Telegram?.WebApp);
+
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram?.WebApp;
-      const userId = tg?.initDataUnsafe?.user?.id || 0;
-      // Если userId == 0, считаем что это админ (fallback для проблем с Telegram WebApp)
-      const adminCheck = userId === ADMIN_ID || userId === 0;
+      const userId = tg?.initDataUnsafe?.user?.id;
+      // Проверяем только реальный userId, не используем fallback на 0
+      const adminCheck = userId === ADMIN_ID;
       console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
+      console.log('initDataUnsafe:', tg.initDataUnsafe);
       setIsAdmin(adminCheck);
       // Админ видит админ-панель по умолчанию
       setShowAdmin(adminCheck);
       tg.ready();
       tg.expand();
+      console.log('=== TELEGRAM WEBAPP READY ===');
     } else {
       // Если открыто не через Telegram, разрешаем админ-режим
       console.log('Not opened via Telegram, setting admin mode');
