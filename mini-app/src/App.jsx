@@ -157,13 +157,19 @@ export default function App() {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('Loading data, isAdmin:', isAdmin);
-      
+      console.log('=== LOAD DATA START ===');
+      console.log('isAdmin:', isAdmin);
+      console.log('API baseUrl:', apiClient.baseUrl);
+
       // Загружаем только GUI settings для всех
+      console.log('Loading GUI settings...');
       const settings = await apiClient.getGUISettings().catch(e => {
-        console.error('Error loading settings:', e);
+        console.error('=== ERROR loading settings ===', e);
+        console.error('Error message:', e.message);
+        console.error('Error stack:', e.stack);
         return null;
       });
+      console.log('Settings loaded:', settings);
       setGuiSettings(settings || {
         background_color: '#ffffff',
         primary_color: '#6366f1',
@@ -175,18 +181,24 @@ export default function App() {
 
       // Загружаем клиентские данные только если не админ
       if (!isAdmin) {
-        console.log('Loading client data (available dates)');
+        console.log('Loading client data (available dates)...');
         const dates = await apiClient.getAvailableDates().catch(e => {
-          console.error('Error loading dates:', e);
+          console.error('=== ERROR loading dates ===', e);
+          console.error('Error message:', e.message);
+          console.error('Error stack:', e.stack);
           return [];
         });
+        console.log('Dates loaded:', dates);
         setAvailableDates(dates || []);
       } else {
         console.log('Skipping client data loading (admin mode)');
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('=== CATCH ERROR in loadData ===', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
     } finally {
+      console.log('=== LOAD DATA END, setting loading to false ===');
       setLoading(false);
     }
   };
