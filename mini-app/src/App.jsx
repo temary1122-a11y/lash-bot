@@ -284,8 +284,11 @@ export default function App() {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner-warm"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-warm-bg-light to-warm-bg-deep">
+        <div className="text-center">
+          <div className="spinner-warm mx-auto mb-4"></div>
+          <p className="text-warm-text font-medium">Загрузка...</p>
+        </div>
       </div>
     );
   }
