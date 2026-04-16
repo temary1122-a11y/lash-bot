@@ -5,10 +5,23 @@
 import os
 from dotenv import load_dotenv
 
+# Загружаем .env если он существует (для локальной разработки)
+# На Railway переменные окружения устанавливаются напрямую
 load_dotenv()
 
 # ── Токен бота (получить у @BotFather) ──────────────────────
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+
+# Если токен не найден, пробуем прочитать из .env файла напрямую
+if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+    try:
+        with open('.env', 'r') as f:
+            for line in f:
+                if line.startswith('BOT_TOKEN='):
+                    BOT_TOKEN = line.split('=', 1)[1].strip()
+                    break
+    except:
+        pass
 
 # ── ID администратора (ваш Telegram user_id) ────────────────
 ADMIN_ID: int = int(os.getenv("ADMIN_ID", "123456789"))

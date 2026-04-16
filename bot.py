@@ -86,6 +86,13 @@ async def on_shutdown(bot: Bot) -> None:
 
 
 async def main() -> None:
+    # Логируем токен для диагностики (скрываем середину)
+    if BOT_TOKEN:
+        token_preview = BOT_TOKEN[:10] + "..." + BOT_TOKEN[-10:] if len(BOT_TOKEN) > 20 else BOT_TOKEN
+        logger.info(f"BOT_TOKEN loaded: {token_preview}")
+    else:
+        logger.error("BOT_TOKEN is empty or None!")
+
     # ── Создаём экземпляр бота ──────────────────────────────
     bot = Bot(
         token=BOT_TOKEN,
