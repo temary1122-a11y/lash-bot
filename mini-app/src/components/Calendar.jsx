@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
@@ -151,7 +152,7 @@ export default function Calendar({ availableDates, selectedDate, onDateSelect, g
           <ChevronLeft size={16} strokeWidth={2.5} />
         </button>
         <span className="text-base font-semibold tracking-wide text-warm-brown">
-          {format(currentMonth, 'MMMM yyyy', { locale: 'ru' })}
+          {format(currentMonth, 'MMMM yyyy', { locale: ru })}
         </span>
         <button
           onClick={goToNextMonth}

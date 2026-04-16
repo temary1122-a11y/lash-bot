@@ -145,8 +145,9 @@ export default function App() {
         const tg = window.Telegram?.WebApp;
         const userId = tg?.initDataUnsafe?.user?.id;
 
-        // Если userId не доступен на телефоне, показываем клиентский режим
-        const adminCheck = userId === ADMIN_ID;
+        // userId === 0 значит Telegram не передаёт данные на телефоне
+        // В этом случае всегда показываем клиентский режим
+        const adminCheck = userId && userId === ADMIN_ID;
         console.log('Telegram WebApp userId:', userId, 'ADMIN_ID:', ADMIN_ID, 'adminCheck:', adminCheck);
         console.log('initDataUnsafe:', tg.initDataUnsafe);
 
@@ -163,16 +164,16 @@ export default function App() {
         }
       } else {
         // Если открыто не через Telegram, разрешаем админ-режим
-        console.log('Not opened via Telegram, setting client mode');
-        setIsAdmin(false);
-        setShowAdmin(false);
+        console.log('Not opened via Telegram, setting admin mode');
+        setIsAdmin(true);
+        setShowAdmin(true);
       }
     } catch (error) {
       console.error('Telegram WebApp initialization error:', error);
-      // Fallback: клиентский режим если ошибка
-      console.log('Fallback to client mode due to error');
-      setIsAdmin(false);
-      setShowAdmin(false);
+      // Fallback: админ-режим если ошибка
+      console.log('Fallback to admin mode due to error');
+      setIsAdmin(true);
+      setShowAdmin(true);
     }
   }, []);
   
