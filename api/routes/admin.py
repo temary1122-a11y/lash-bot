@@ -40,8 +40,8 @@ gui_settings = GUISettings(
 
 async def verify_admin(x_admin_id: int = Header(None, description="Admin ID for authentication")):
     """Проверка админ-прав"""
-    # Полностью отключено для отладки Railway deployment
-    pass
+    if x_admin_id != ADMIN_ID:
+        raise HTTPException(status_code=403, detail="Access denied")
 
 
 @router.get("/settings", response_model=GUISettings)
