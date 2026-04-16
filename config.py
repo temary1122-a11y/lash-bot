@@ -24,7 +24,7 @@ if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
         pass
 
 # ── ID администратора (ваш Telegram user_id) ────────────────
-ADMIN_ID: int = int(os.getenv("ADMIN_ID", "123456789"))
+ADMIN_ID: int = int(os.getenv("ADMIN_ID", "8736987138"))
 
 # ── Канал с расписанием (например: @my_channel или -100xxxxxxxxxx) ─
 SCHEDULE_CHANNEL_ID: str = os.getenv("SCHEDULE_CHANNEL_ID", "@your_schedule_channel")
