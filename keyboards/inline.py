@@ -13,7 +13,7 @@ from config import CHANNEL_LINK, PORTFOLIO_LINK
 # ────────────────────────────────────────────────────────────
 def main_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="📅 Записаться", web_app=WebAppInfo(url="https://mini-app-dimas-projects-b1508eec.vercel.app")))
+    builder.row(InlineKeyboardButton(text="📅 Записаться", web_app=WebAppInfo(url="https://mini-4d41sl3e8-dimas-projects-b1508eec.vercel.app")))
     builder.row(InlineKeyboardButton(text="📋 Моя запись", callback_data="my_booking"))
     builder.row(InlineKeyboardButton(text="❌ Отменить запись", callback_data="cancel_booking"))
     return builder.as_markup()
@@ -105,7 +105,7 @@ def back_to_main_kb() -> InlineKeyboardMarkup:
 # ────────────────────────────────────────────────────────────
 def admin_menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-app-dimas-projects-b1508eec.vercel.app")))
+    builder.row(InlineKeyboardButton(text="✨ Mini App", web_app=WebAppInfo(url="https://mini-4d41sl3e8-dimas-projects-b1508eec.vercel.app")))
     builder.row(InlineKeyboardButton(text=" В главное меню", callback_data="back_to_main"))
     return builder.as_markup()
 
