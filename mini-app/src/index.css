@@ -14,7 +14,7 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: linear-gradient(135deg, #e8d0bc 0%, #d4b99e 40%, #c9a98c 100%);
+    background: #f5f5f5;
     min-height: 100vh;
   }
 }
