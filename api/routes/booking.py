@@ -2,10 +2,11 @@
 # api/routes/booking.py — Routes для записи
 # ============================================================
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from slowapi import Limiter
 
 # Pydantic модель для отмены записи
 class CancelBookingRequest(BaseModel):
@@ -24,8 +25,12 @@ from database.db import (
 
 router = APIRouter(prefix="/api/booking", tags=["booking"])
 
+# Rate limiter instance
+limiter = Limiter(key_func=lambda r: r.client.host if r.client else r.headers.get("x-forwarded-for", ""))
+
 
 @router.get("/available-dates", response_model=List[WorkDay])
+@limiter.limit("60/minute")
 async def get_available_dates():
     """Получить доступные даты и слоты"""
     try:
@@ -52,7 +57,8 @@ async def get_available_dates():
 
 
 @router.post("/book", response_model=BookingResponse)
-async def create_booking_endpoint(booking: BookingRequest):
+@limiter.limit("5/hour")
+async def create_booking_endpoint(request: Request, booking: BookingRequest):
     """Создать запись"""
     try:
         # Проверяем доступность слота
@@ -120,7 +126,8 @@ async def get_my_bookings(user_id: int):
 
 
 @router.delete("/cancel/{booking_id}")
-async def cancel_booking_endpoint(booking_id: int):
+@limiter.limit("10/hour")
+async def cancel_booking_endpoint(request: Request, booking_id: int):
     """Отменить запись"""
     try:
         result = cancel_booking_by_id(booking_id)
@@ -132,10 +139,11 @@ async def cancel_booking_endpoint(booking_id: int):
 
 
 @router.post("/bookings/{booking_id}/cancel")
-async def cancel_booking_with_reason(booking_id: int, request: CancelBookingRequest):
+@limiter.limit("10/hour")
+async def cancel_booking_with_reason(request: Request, booking_id: int, cancel_request: CancelBookingRequest):
     """Отменить запись с причиной"""
     try:
-        result = cancel_booking_by_id(booking_id, request.reason)
+        result = cancel_booking_by_id(booking_id, cancel_request.reason)
         if result is None:
             return {"success": False, "message": "Запись не найдена"}
         return {"success": True, "message": "Запись отменена с причиной"}
@@ -144,7 +152,8 @@ async def cancel_booking_with_reason(booking_id: int, request: CancelBookingRequ
 
 
 @router.get("/bookings/history")
-async def get_booking_history_endpoint():
+@limiter.limit("30/minute")
+async def get_booking_history_endpoint(request: Request):
     """Получить историю всех записей"""
     try:
         history = get_booking_history()
@@ -154,7 +163,8 @@ async def get_booking_history_endpoint():
 
 
 @router.get("/bookings/cancelled")
-async def get_cancelled_bookings_endpoint():
+@limiter.limit("30/minute")
+async def get_cancelled_bookings_endpoint(request: Request):
     """Получить отмененные записи с причинами"""
     try:
         cancelled = get_cancelled_bookings()

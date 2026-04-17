@@ -4,3 +4,5 @@ apscheduler==3.10.4
 pydantic-core>=2.14.0
 fastapi==0.115.0
 uvicorn==0.32.0
+slowapi==0.1.9
+aiofiles==24.1.0
