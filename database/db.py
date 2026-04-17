@@ -74,6 +74,9 @@ def init_db() -> None:
                     day_date     TEXT    NOT NULL,
                     slot_time    TEXT    NOT NULL,
                     created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+                    is_cancelled INTEGER NOT NULL DEFAULT 0,
+                    cancel_reason TEXT,
+                    cancelled_at TEXT,
                     UNIQUE(day_date, slot_time)
                 );
 
@@ -82,6 +85,15 @@ def init_db() -> None:
 
                 -- Миграция: добавляем service_id в bookings если нет
                 ALTER TABLE bookings ADD COLUMN service_id TEXT;
+
+                -- Миграция: добавляем is_cancelled в bookings если нет
+                ALTER TABLE bookings ADD COLUMN is_cancelled INTEGER NOT NULL DEFAULT 0;
+
+                -- Миграция: добавляем cancel_reason в bookings если нет
+                ALTER TABLE bookings ADD COLUMN cancel_reason TEXT;
+
+                -- Миграция: добавляем cancelled_at в bookings если нет
+                ALTER TABLE bookings ADD COLUMN cancelled_at TEXT;
             """)
     except sqlite3.OperationalError:
         # Игнорируем ошибку если колонка уже существует
@@ -316,19 +328,40 @@ def cancel_booking_by_user(user_id: int) -> Optional[sqlite3.Row]:
         return booking
 
 
-def cancel_booking_by_id(booking_id: int) -> Optional[sqlite3.Row]:
-    """Отменяет запись по ID (для администратора)."""
+def cancel_booking_by_id(booking_id: int, reason: Optional[str] = None) -> Optional[sqlite3.Row]:
+    """
+    Отменяет запись по ID (для администратора).
+    Если указана reason, сохраняет причину отмены вместо удаления записи.
+    """
     with get_conn() as conn:
         booking = conn.execute(
             "SELECT * FROM bookings WHERE id=?", (booking_id,)
         ).fetchone()
         if booking is None:
             return None
-        conn.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
-        conn.execute(
-            "UPDATE time_slots SET is_booked=0 WHERE day_date=? AND slot_time=?",
-            (booking["day_date"], booking["slot_time"])
-        )
+
+        if reason:
+            # Помечаем запись как отмененную с причиной
+            conn.execute(
+                """UPDATE bookings
+                   SET is_cancelled = 1,
+                       cancel_reason = ?,
+                       cancelled_at = datetime('now')
+                   WHERE id = ?""",
+                (reason, booking_id)
+            )
+            # Освобождаем слот
+            conn.execute(
+                "UPDATE time_slots SET is_booked=0 WHERE day_date=? AND slot_time=?",
+                (booking["day_date"], booking["slot_time"])
+            )
+        else:
+            # Удаляем запись полностью (старое поведение)
+            conn.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
+            conn.execute(
+                "UPDATE time_slots SET is_booked=0 WHERE day_date=? AND slot_time=?",
+                (booking["day_date"], booking["slot_time"])
+            )
         return booking
 
 
@@ -355,6 +388,25 @@ def get_all_future_bookings() -> list[sqlite3.Row]:
             SELECT * FROM bookings
             WHERE day_date >= date('now', 'localtime')
             ORDER BY day_date, slot_time
+        """).fetchall()
+
+
+def get_booking_history() -> list[sqlite3.Row]:
+    """Все записи (включая отмененные) для анализа трафика."""
+    with get_conn() as conn:
+        return conn.execute("""
+            SELECT * FROM bookings
+            ORDER BY day_date DESC, slot_time DESC
+        """).fetchall()
+
+
+def get_cancelled_bookings() -> list[sqlite3.Row]:
+    """Только отмененные записи с причинами."""
+    with get_conn() as conn:
+        return conn.execute("""
+            SELECT * FROM bookings
+            WHERE is_cancelled = 1
+            ORDER BY cancelled_at DESC
         """).fetchall()
 
 

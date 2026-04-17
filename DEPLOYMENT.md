@@ -1,8 +1,8 @@
-# Деплой Lash Bot с Mini App
+# Деплой Lash Bot с Mini App (Liquid Glass Design)
 
 ## Бесплатные хостинги
 
-### Frontend (React + Vite)
+### Frontend (React 19 + Vite 7 + TailwindCSS 4)
 
 **Вариант 1: Vercel (рекомендуется)**
 1. Создайте аккаунт на https://vercel.com
@@ -22,7 +22,7 @@
    ```
 3. Загрузите папку `dist` на Netlify через drag & drop
 
-### Backend (FastAPI)
+### Backend (FastAPI + Python 3.13)
 
 **Вариант 1: Render (рекомендуется)**
 1. Создайте аккаунт на https://render.com
@@ -45,14 +45,35 @@
 1. В `mini-app/.env`:
    ```
    VITE_BACKEND_URL=https://your-backend.onrender.com
+   VITE_PRICES_POST_LINK=https://t.me/your_channel/post_id
+   VITE_TIKTOK_LINK=https://tiktok.com/@yourusername
+   VITE_INSTAGRAM_LINK=https://instagram.com/yourusername
    ```
 
 2. В `mini-app` выполните:
    ```bash
+   npm install
    npm run build
    ```
 
 3. Разверните папку `dist` на Vercel/Netlify
+
+## Новые функции v2.0
+
+### Отмена записи с причиной
+- Клиент может отменить запись через бота с указанием причины
+- Причина сохраняется в базе данных
+- Админ видит статус отмены и причину в Mini App
+
+### История записей
+- Админ может просматривать полную историю записей
+- Данные доступны для анализа трафика
+- Фильтрация по статусу (активные/отмененные)
+
+### Напоминания
+- Автоматические напоминания за 24 часа до записи
+- Отправляются через Telegram Bot
+- Настраиваются через APScheduler
 
 ## Настройка Telegram Bot
 

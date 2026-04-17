@@ -1,12 +1,12 @@
 # Lash Bot - Telegram Bot for Eyelash Extensions Booking
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
-[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://python.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://reactjs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-2CA5E0.svg)](https://core.telegram.org/bots)
 
-A Telegram bot for automating eyelash extensions booking. Clients can choose dates and times through an interactive calendar, while masters manage schedules through an admin panel.
+A Telegram bot for automating eyelash extensions booking. Clients can choose dates and times through an interactive Mini App with liquid glass design, while masters manage schedules through an admin panel.
 
 ## ✨ Features
 
@@ -25,10 +25,12 @@ A Telegram bot for automating eyelash extensions booking. Clients can choose dat
 - 🗑 Delete time slots
 - 🔒/🔓 Close/open days
 - 📋 View schedule
-- ❌ Cancel client bookings
+- ❌ Cancel client bookings with reason
 - 📢 Publish schedule to channel
-- 🎨 Customize Mini App design (colors, background)
+- 🎨 Liquid glass design Mini App
 - 🔧 Manage booking dates through admin panel
+- 📊 View booking history and analytics
+- 📋 View cancelled bookings with reasons
 
 ## 🚀 Quick Start
 
@@ -128,19 +130,20 @@ lash_bot/
 ## 🛠 Tech Stack
 
 ### Backend:
-- **Python 3.12** - Programming language
+- **Python 3.13** - Programming language
 - **aiogram 3.x** - Telegram Bot Framework
 - **FastAPI** - API for Mini App
 - **SQLite** - Database
-- **APScheduler** - Task scheduler
+- **APScheduler** - Task scheduler for reminders
 - **python-dotenv** - Environment variables
 
 ### Frontend:
-- **React 18** - UI library
-- **Vite** - Build tool
-- **TailwindCSS** - Styling
+- **React 19** - UI library
+- **Vite 7** - Build tool
+- **TailwindCSS 4** - Styling with liquid glass design
 - **Telegram Web Apps SDK** - Telegram integration
-- **date-fns** - Date utilities
+- **Framer Motion** - Animations
+- **date-fns 4** - Date utilities
 - **lucide-react** - Icons
 
 ## 🌐 Deployment

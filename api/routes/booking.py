@@ -5,6 +5,11 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from datetime import datetime, timedelta
+from pydantic import BaseModel
+
+# Pydantic модель для отмены записи
+class CancelBookingRequest(BaseModel):
+    reason: str
 
 from api.models import WorkDay, TimeSlot, BookingRequest, BookingResponse, MyBooking
 from database.db import (
@@ -13,6 +18,8 @@ from database.db import (
     create_booking,
     get_user_booking,
     cancel_booking_by_id,
+    get_booking_history,
+    get_cancelled_bookings,
 )
 
 router = APIRouter(prefix="/api/booking", tags=["booking"])
@@ -120,5 +127,37 @@ async def cancel_booking_endpoint(booking_id: int):
         if result is None:
             return {"success": False, "message": "Запись не найдена"}
         return {"success": True, "message": "Запись отменена"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/bookings/{booking_id}/cancel")
+async def cancel_booking_with_reason(booking_id: int, request: CancelBookingRequest):
+    """Отменить запись с причиной"""
+    try:
+        result = cancel_booking_by_id(booking_id, request.reason)
+        if result is None:
+            return {"success": False, "message": "Запись не найдена"}
+        return {"success": True, "message": "Запись отменена с причиной"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/bookings/history")
+async def get_booking_history_endpoint():
+    """Получить историю всех записей"""
+    try:
+        history = get_booking_history()
+        return {"success": True, "bookings": [dict(row) for row in history]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/bookings/cancelled")
+async def get_cancelled_bookings_endpoint():
+    """Получить отмененные записи с причинами"""
+    try:
+        cancelled = get_cancelled_bookings()
+        return {"success": True, "bookings": [dict(row) for row in cancelled]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,15 +1,16 @@
 // ============================================================
-// src/api/client.js — API клиент для Mini App
+// src/api/client.ts — API клиент для Liquid Glass Calendar Design
 // ============================================================
 
 class ApiClient {
+  private baseUrl: string;
+
   constructor() {
-    // Для разработки: localhost
-    // Для продакшена: production backend URL
-    this.baseUrl = import.meta.env.VITE_BACKEND_URL || 'https://lashes-production-3342.up.railway.app';
+    // Используем BASE_URL из env или дефолтное значение
+    this.baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
   }
 
-  async request(endpoint, options = {}) {
+  private async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseUrl}${endpoint}`;
 
     console.group(`API Request: ${options.method || 'GET'} ${endpoint}`);
@@ -19,7 +20,7 @@ class ApiClient {
     if (options.body) {
       console.log('Body (string):', options.body);
       try {
-        console.log('Body (parsed):', JSON.parse(options.body));
+        console.log('Body (parsed):', JSON.parse(options.body as string));
       } catch (e) {
         console.error('Body is not valid JSON!');
       }
@@ -42,7 +43,7 @@ class ApiClient {
       console.groupEnd();
 
       if (!response.ok) {
-        throw new Error(data.detail || `HTTP ${response.status}`);
+        throw new Error((data as any).detail || `HTTP ${response.status}`);
       }
 
       return data;
@@ -52,42 +53,42 @@ class ApiClient {
       throw error;
     }
   }
-  
+
   // Booking endpoints
   async getAvailableDates() {
     return this.request('/api/booking/available-dates');
   }
-  
-  async createBooking(bookingData) {
+
+  async createBooking(bookingData: any) {
     return this.request('/api/booking/book', {
       method: 'POST',
       body: JSON.stringify(bookingData),
     });
   }
-  
-  async getMyBookings(userId) {
+
+  async getMyBookings(userId: string) {
     return this.request(`/api/booking/my-bookings/${userId}`);
   }
-  
-  async cancelBooking(bookingId) {
+
+  async cancelBooking(bookingId: string) {
     return this.request(`/api/booking/cancel/${bookingId}`, {
       method: 'DELETE',
     });
   }
-  
+
   // Admin endpoints
   async getGUISettings() {
     return this.request('/api/admin/settings');
   }
 
-  async updateGUISettings(settings) {
+  async updateGUISettings(settings: any) {
     return this.request('/api/admin/settings', {
       method: 'POST',
       body: JSON.stringify(settings),
     });
   }
 
-  async getWorkDays(adminId) {
+  async getWorkDays(adminId: string) {
     return this.request('/api/admin/work-days', {
       headers: {
         'x-admin-id': adminId,
@@ -95,7 +96,7 @@ class ApiClient {
     });
   }
 
-  async addWorkDay(date, timeSlots, adminId) {
+  async addWorkDay(date: string, timeSlots: string[], adminId: string) {
     const body = { date, time_slots: timeSlots };
     return this.request('/api/admin/add-work-day', {
       method: 'POST',
@@ -106,7 +107,7 @@ class ApiClient {
     });
   }
 
-  async addTimeSlot(adminId, date, time) {
+  async addTimeSlot(adminId: string, date: string, time: string) {
     console.log(`[API] addTimeSlot → date: ${date}, time: ${time}, adminId: ${adminId}`);
     return this.request('/api/admin/add-time-slot', {
       method: 'POST',
@@ -117,7 +118,7 @@ class ApiClient {
     });
   }
 
-  async deleteTimeSlot(adminId, date, time) {
+  async deleteTimeSlot(adminId: string, date: string, time: string) {
     return this.request('/api/admin/delete-time-slot', {
       method: 'POST',
       body: JSON.stringify({ date, time }),
@@ -127,18 +128,18 @@ class ApiClient {
     });
   }
 
-  async deleteWorkDay(day_date) {
+  async deleteWorkDay(day_date: string) {
     return this.request('/api/admin/delete-work-day', {
       method: 'POST',
       body: JSON.stringify({ day_date }),
     });
   }
 
-  async getBookingsForDate(date) {
+  async getBookingsForDate(date: string) {
     return this.request(`/api/admin/bookings/${date}`);
   }
 
-  async openDay(date, adminId) {
+  async openDay(date: string, adminId: string) {
     return this.request('/api/admin/open-day', {
       method: 'POST',
       headers: {
@@ -148,7 +149,7 @@ class ApiClient {
     });
   }
 
-  async closeDay(date, adminId) {
+  async closeDay(date: string, adminId: string) {
     return this.request('/api/admin/close-day', {
       method: 'POST',
       headers: {
@@ -156,6 +157,22 @@ class ApiClient {
       },
       body: JSON.stringify({ date }),
     });
+  }
+
+  // Новые методы для отмены и истории
+  async cancelBookingWithReason(bookingId: number, reason: string) {
+    return this.request(`/api/bookings/${bookingId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getBookingHistory() {
+    return this.request('/api/bookings/history');
+  }
+
+  async getCancelledBookings() {
+    return this.request('/api/bookings/cancelled');
   }
 }
 
