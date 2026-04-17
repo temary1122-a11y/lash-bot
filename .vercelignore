@@ -1,0 +1,24 @@
+# Python files (not needed for frontend)
+requirements.txt
+*.py
+venv/
+__pycache__/
+*.db
+*.db-shm
+*.db-wal
+
+# Backend folders
+api/
+database/
+handlers/
+utils/
+bot.py
+config.py
+states.py
+
+# Backup files
+*_backup/
+*.backup
+
+# Environment files
+.env
