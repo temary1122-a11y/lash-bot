@@ -31,7 +31,7 @@ limiter = Limiter(key_func=lambda r: r.client.host if r.client else r.headers.ge
 
 @router.get("/available-dates", response_model=List[WorkDay])
 @limiter.limit("60/minute")
-async def get_available_dates():
+async def get_available_dates(request: Request):
     """Получить доступные даты и слоты"""
     try:
         work_days = get_available_work_days()
