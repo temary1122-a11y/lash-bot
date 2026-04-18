@@ -7,11 +7,11 @@ __pycache__/
 *.db-shm
 *.db-wal
 
-# Backend folders
-api/
-database/
-handlers/
-utils/
+# Backend folders (exclude only root level)
+./api/
+./database/
+./handlers/
+./utils/
 bot.py
 config.py
 states.py
