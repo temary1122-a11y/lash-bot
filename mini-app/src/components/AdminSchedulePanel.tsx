@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { MESSAGE_TEMPLATES, CONTACT_INFO } from '../config';
-import { apiClient } from '@/api/client';
+import { apiClient } from '@/api/client.ts';
 import TimePicker from './TimePicker';
 
 const DAYS_HEADER = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
