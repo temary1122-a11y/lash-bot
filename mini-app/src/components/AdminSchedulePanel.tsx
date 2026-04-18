@@ -24,8 +24,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
-import { MESSAGE_TEMPLATES, CONTACT_INFO, BOT_CONFIG } from '../config';
-import { apiClient } from '../api/client';
+import { MESSAGE_TEMPLATES, CONTACT_INFO } from '../config';
+import { apiClient } from '@/api/client';
 import TimePicker from './TimePicker';
 
 const DAYS_HEADER = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -61,7 +61,7 @@ interface AdminDayCardProps {
   isCurrentMonth: boolean;
   isSelected: boolean;
   onClick: () => void;
-  bookedClients?: Array<{ time: string; status?: 'pending' | 'confirmed' }>; // Клиенты с информацией о статусах
+  bookedClients?: Array<{ time: string; status?: 'pending' | 'confirmed' | 'cancelled' }>; // Клиенты с информацией о статусах
 }
 
 function AdminDayCard({ date, slots, isCurrentMonth, isSelected, onClick, bookedClients = [] }: AdminDayCardProps) {
@@ -134,7 +134,7 @@ interface SelectedDayPanelProps {
   slots: string[];
   onAddSlot: (time: string) => void;
   onRemoveSlot: (time: string) => void;
-  bookedClients?: Array<{ name: string; time: string; userId?: string; username?: string; note?: string; status?: 'pending' | 'confirmed' }>;
+  bookedClients?: Array<{ name: string; time: string; userId?: string; username?: string; note?: string; status?: 'pending' | 'confirmed' | 'cancelled' }>;
   onUpdateClient?: (oldTime: string, newClient: { name: string; time: string; userId?: string; username?: string; note?: string }, isNewClient: boolean) => void;
 }
 
@@ -599,13 +599,13 @@ export default function AdminSchedulePanel() {
   };
 
   const updateClient = (oldTime: string, newClient: { name: string; time: string; userId?: string; username?: string; note?: string }, isNewClient: boolean) => {
-    setClients((prev: typeof MOCK_CLIENTS) => {
+    setClients((prev: Client[]) => {
       const dateKey = selectedDay;
       if (!dateKey) return prev;
 
       if (isNewClient) {
         // Создание нового клиента
-        const newId = Math.max(...prev.map((c: typeof MOCK_CLIENTS[0]) => c.id), 0) + 1;
+        const newId = Math.max(...prev.map((c: Client) => c.id), 0) + 1;
         // Если есть username или userId → pending (через Telegram)
         // Если нет → confirmed (ручная запись)
         const hasTelegram = !!(newClient.username || newClient.userId);
@@ -625,7 +625,7 @@ export default function AdminSchedulePanel() {
         ];
       } else {
         // Обновление существующего клиента
-        return prev.map((client: typeof MOCK_CLIENTS[0]) => {
+        return prev.map((client: Client) => {
           if (client.date === dateKey && client.time === oldTime) {
             return {
               ...client,
@@ -643,8 +643,8 @@ export default function AdminSchedulePanel() {
   };
 
   const confirmBooking = (clientId: number) => {
-    setClients((prev: typeof MOCK_CLIENTS) => {
-      const client = prev.find(c => c.id === clientId);
+    setClients((prev: Client[]) => {
+      const client = prev.find((c: Client) => c.id === clientId);
       if (!client) return prev;
 
       // Проверяем наличие username или userId
@@ -654,7 +654,7 @@ export default function AdminSchedulePanel() {
       }
 
       // Меняем статус на confirmed
-      const updated = prev.map((c: typeof MOCK_CLIENTS[0]) =>
+      const updated = prev.map((c: Client) =>
         c.id === clientId ? { ...c, status: 'confirmed' as const } : c
       );
 
@@ -663,7 +663,7 @@ export default function AdminSchedulePanel() {
         name: client.name,
         date: format(parseISO(client.date), 'd MMMM yyyy', { locale: ru }),
         time: client.time,
-        service: client.service,
+        service: client.service || 'Запись',
         address: CONTACT_INFO.ADDRESS,
       });
 
@@ -680,9 +680,9 @@ export default function AdminSchedulePanel() {
   const selectedDate = selectedDay ? parseISO(selectedDay) : null;
   const selectedSlots = selectedDay ? (slots[selectedDay] ?? []) : [];
 
-  const getClientsForDate = (date: Date): typeof MOCK_CLIENTS => {
+  const getClientsForDate = (date: Date): Client[] => {
     const key = format(date, 'yyyy-MM-dd');
-    return clients.filter((client: typeof MOCK_CLIENTS[0]) => client.date === key);
+    return clients.filter((client: Client) => client.date === key);
   };
 
   return (
